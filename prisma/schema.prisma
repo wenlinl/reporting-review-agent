@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String         @id @default(cuid())
+  name         String
+  email        String         @unique
+  passwordHash String
+  role         String         @default("user") // admin | user
+  active       Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  presentations Presentation[]
+}
+
+model Presentation {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  goal      String?
+  status    String   @default("draft") // draft | reviewed | finalized | presented
+  pptPath   String?
+  pptName   String?
+  pptText   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reviews    Review[]
+  recordings Recording[]
+  feedback   Feedback?
+}
+
+model Review {
+  id             String       @id @default(cuid())
+  presentationId String
+  presentation   Presentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
+  content        String // JSON：{ overall, items: [{dimension, issue, suggestion, priority}] }
+  sourcePptName  String?
+  createdAt      DateTime     @default(now())
+}
+
+model Recording {
+  id               String       @id @default(cuid())
+  presentationId   String
+  presentation     Presentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
+  filePath         String
+  fileName         String
+  durationSec      Int?
+  transcript       String?
+  transcriptStatus String       @default("pending") // pending | transcribing | done | failed | manual
+  asrError         String?
+  createdAt        DateTime     @default(now())
+}
+
+model Feedback {
+  id             String       @id @default(cuid())
+  presentationId String       @unique
+  presentation   Presentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
+  content        String // JSON：{ overall, highlights[], improvements[], history }
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Setting {
+  key   String @id
+  value String
+}
+
+model ChatHistory {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  messages  String // JSON 数组：{ role, content } 最近对话
+  updatedAt DateTime @updatedAt
+}

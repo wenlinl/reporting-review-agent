@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  @apply text-slate-700 antialiased;
+  background-color: #f2f6fc;
+  background-image:
+    radial-gradient(900px 480px at 85% -10%, rgba(34, 211, 238, 0.16), transparent 60%),
+    radial-gradient(800px 520px at 0% 110%, rgba(99, 102, 241, 0.13), transparent 55%),
+    linear-gradient(rgba(100, 116, 139, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(100, 116, 139, 0.055) 1px, transparent 1px);
+  background-size:
+    auto,
+    auto,
+    34px 34px,
+    34px 34px;
+  background-attachment: fixed;
+}
+
+::selection {
+  background: rgba(34, 211, 238, 0.3);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.45) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.4);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@layer components {
+  /* 浅色玻璃卡片：保留科技感的半透明质感 */
+  .card-glass {
+    @apply rounded-2xl border border-slate-200 bg-white/80 shadow-[0_6px_24px_rgba(15,23,42,0.06)] backdrop-blur;
+  }
+
+  /* 渐变文字 */
+  .text-gradient {
+    background: linear-gradient(92deg, #0891b2 0%, #4f46e5 55%, #9333ea 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* 步骤编号芯片 */
+  .step-chip {
+    @apply flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500 to-indigo-600 text-xs font-bold text-white shadow-[0_2px_10px_rgba(34,211,238,0.35)];
+  }
+
+  /* 主按钮光晕 */
+  .btn-primary-glow {
+    @apply rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(79,70,229,0.3)] transition hover:from-cyan-400 hover:to-indigo-500 disabled:opacity-50;
+  }
+
+  .panel-inner {
+    @apply rounded-xl border border-slate-200 bg-slate-100/70;
+  }
+}
