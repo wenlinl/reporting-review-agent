@@ -78,3 +78,218 @@ model ChatHistory {
   messages  String // JSON 数组：{ role, content } 最近对话
   updatedAt DateTime @updatedAt
 }
+
+// ==================== 食刻（ShiKe）====================
+
+model Member {
+  id                  String   @id @default(cuid())
+  name                String   @unique
+  role                String   @default("member") // admin | member
+  avatar              String?
+  responsibleCategory String?
+  preferences         String?  // JSON：["清淡","家常"]
+  createdAt           DateTime @default(now())
+}
+
+model Device {
+  id              String    @id @default(cuid())
+  deviceId        String    @unique
+  name            String?
+  firmwareVersion String?
+  memberId        String?
+  lastSeenAt      DateTime?
+  createdAt       DateTime  @default(now())
+}
+
+model Container {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  icon      String?
+  sort      Int      @default(0)
+  builtIn   Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model FoodCatalog {
+  id                 String   @id @default(cuid())
+  name               String   @unique
+  category           String?
+  emoji              String?
+  keepDays           Int?
+  defaultExpiryDays  Int?
+  suggestedContainer String?
+  aliases            String?  // JSON 数组
+  nutrition          String?  // JSON：{ protein, vitaminC, fiber, calcium }
+  source             String   @default("ai") // ai | manual
+  correctedAt        DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model FoodItem {
+  id           String    @id @default(cuid())
+  deviceId     String
+  memberId     String?
+  name         String
+  category     String?
+  emoji        String?
+  container    String
+  quantity     Int       @default(1)
+  recordMethod String    @default("camera") // camera | manual
+  keepDays     Int?
+  storage      String?   // 保鲜中 | 冷藏中 | 冷冻 | 常温
+  label        String?
+  scannedAt    DateTime
+  expiryDate   DateTime?
+  daysLeft     Int
+  confidence   Float
+  note         String?
+  imagePath    String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([name, container, deviceId])
+  @@index([container])
+}
+
+model ScanLog {
+  id           String   @id @default(cuid())
+  deviceId     String
+  memberId     String?
+  action       String // in | out
+  name         String
+  category     String?
+  emoji        String?
+  container    String
+  quantity     Int      @default(1)
+  recordMethod String   @default("camera")
+  keepDays     Int?
+  scannedAt    DateTime
+  expiryDate   DateTime?
+  daysLeft     Int
+  confidence   Float
+  note         String?
+  imagePath    String?
+  createdAt    DateTime @default(now())
+
+  @@index([scannedAt])
+  @@index([container])
+}
+
+model FoodTrace {
+  id        String    @id @default(cuid())
+  itemId    String    @unique
+  source    String?
+  origin    String?
+  batch     String?
+  coldChain String?
+  report    String?
+  inTime    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model ShoppingListItem {
+  id        String    @id @default(cuid())
+  name      String
+  qty       Int       @default(1)
+  unit      String?
+  done      Boolean   @default(false)
+  suggested Boolean   @default(false)
+  source    String    @default("manual") // manual | expiry | recipe
+  boughtAt  DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String   // expiry | recipe | member | shop | system
+  title     String
+  desc      String?
+  unread    Boolean  @default(true)
+  view      String?
+  createdAt DateTime @default(now())
+}
+
+model ReminderRecord {
+  id           String    @id @default(cuid())
+  type         String
+  scheduledFor DateTime
+  payload      String?
+  pushedAt     DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@unique([type, scheduledFor])
+}
+
+model ReminderSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String // JSON
+}
+
+model ConsumptionLog {
+  id        String   @id @default(cuid())
+  name      String
+  reason    String   // consumed | wasted | expired
+  quantity  Int      @default(1)
+  memberId  String?
+  note      String?
+  createdAt DateTime @default(now())
+}
+
+model Recipe {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  emoji       String?
+  grad        String?
+  tag         String?
+  timeMin     Int?
+  desc        String?
+  nutr        String?  // JSON
+  ingredients String   // JSON：[{ name, qty, status: 有|缺 }]
+  steps       String?  // JSON 数组
+  tags        String?  // JSON 数组
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model WeeklyMealPlan {
+  id        String   @id @default(cuid())
+  weekStart DateTime
+  date      DateTime
+  recipeId  String
+  status    String   @default("planned")
+  createdAt DateTime @default(now())
+
+  @@unique([date, recipeId])
+}
+
+model RecipePreference {
+  id           String    @id @default(cuid())
+  recipeId     String    @unique
+  liked        Boolean   @default(false)
+  rating       Int?
+  timesCooked  Int       @default(0)
+  lastCookedAt DateTime?
+  updatedAt    DateTime  @updatedAt
+}
+
+model DeviceLog {
+  id        String   @id @default(cuid())
+  deviceId  String
+  event     String
+  msg       String?
+  createdAt DateTime @default(now())
+
+  @@index([deviceId, createdAt])
+}
+
+model TemperatureLog {
+  id        String   @id @default(cuid())
+  deviceId  String
+  tempC     Float
+  readAt    DateTime
+  createdAt DateTime @default(now())
+
+  @@index([deviceId, readAt])
+}

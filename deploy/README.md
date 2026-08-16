@@ -63,3 +63,10 @@ docker run --rm -v midyear-workshop_app-data:/data -v $PWD:/backup alpine tar cz
 | `ARK_API_KEY` | 火山方舟 API Key（豆包大模型） |
 | `VOLC_SPEECH_API_KEY` | 火山语音服务 API Key（ASR 转写） |
 | `VOLC_ASR_MODE` | `flash`（极速版，推荐）/ `standard`（标准版） |
+
+## 6. 食刻接口（后端已并入本工程）
+
+- 新增路由：`/api/scan`（硬件上传+AI识别+入库）、`/api/items`、`/api/items/[id]`（改容器）、`/api/reminders`；
+- 数据库新增模型：`FoodItem`、`ScanLog`（`prisma db push` 自动建表）；
+- 部署 .env 需新增：`ARK_VISION_MODEL=doubao-seed-2-1-turbo-260628`、`ARK_VISION_API_KEY=<支持视觉的方舟 Key>`；
+- 详细契约见工程根目录 `后端对接说明.md`（位于 HsHH 工作区）。

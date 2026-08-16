@@ -14,7 +14,7 @@ export function uploadsRoot() {
 }
 
 export function saveUpload(
-  kind: "ppt" | "audio",
+  kind: "ppt" | "audio" | "xzd",
   filename: string,
   buffer: Buffer,
 ): string {
