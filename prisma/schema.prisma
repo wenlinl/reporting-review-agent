@@ -7,83 +7,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ==================== 账号体系（食刻） ====================
+
 model User {
-  id           String         @id @default(cuid())
+  id           String   @id @default(cuid())
   name         String
-  email        String         @unique
+  email        String   @unique
   passwordHash String
-  role         String         @default("user") // admin | user
-  active       Boolean        @default(true)
-  createdAt    DateTime       @default(now())
-  presentations Presentation[]
+  role         String   @default("user") // admin | user
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  member       Member?
 }
-
-model Presentation {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  title     String
-  goal      String?
-  status    String   @default("draft") // draft | reviewed | finalized | presented
-  pptPath   String?
-  pptName   String?
-  pptText   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  reviews    Review[]
-  recordings Recording[]
-  feedback   Feedback?
-}
-
-model Review {
-  id             String       @id @default(cuid())
-  presentationId String
-  presentation   Presentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
-  content        String // JSON：{ overall, items: [{dimension, issue, suggestion, priority}] }
-  sourcePptName  String?
-  createdAt      DateTime     @default(now())
-}
-
-model Recording {
-  id               String       @id @default(cuid())
-  presentationId   String
-  presentation     Presentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
-  filePath         String
-  fileName         String
-  durationSec      Int?
-  transcript       String?
-  transcriptStatus String       @default("pending") // pending | transcribing | done | failed | manual
-  asrError         String?
-  createdAt        DateTime     @default(now())
-}
-
-model Feedback {
-  id             String       @id @default(cuid())
-  presentationId String       @unique
-  presentation   Presentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
-  content        String // JSON：{ overall, highlights[], improvements[], history }
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-}
-
-model Setting {
-  key   String @id
-  value String
-}
-
-model ChatHistory {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  messages  String // JSON 数组：{ role, content } 最近对话
-  updatedAt DateTime @updatedAt
-}
-
-// ==================== 食刻（ShiKe）====================
 
 model Member {
   id                  String   @id @default(cuid())
-  name                String   @unique
+  userId              String?  @unique // 关联网站账号（注册时自动创建）
+  user                User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  name                String
   role                String   @default("member") // admin | member
   avatar              String?
   responsibleCategory String?
@@ -91,15 +32,40 @@ model Member {
   createdAt           DateTime @default(now())
 }
 
+// ==================== 设备 ====================
+
 model Device {
   id              String    @id @default(cuid())
   deviceId        String    @unique
+  tokenHash       String?   // 设备 Token 的 bcrypt 哈希（固件 X-Device-Token 校验）
   name            String?
   firmwareVersion String?
   memberId        String?
   lastSeenAt      DateTime?
   createdAt       DateTime  @default(now())
 }
+
+model DeviceLog {
+  id        String   @id @default(cuid())
+  deviceId  String
+  event     String
+  msg       String?
+  createdAt DateTime @default(now())
+
+  @@index([deviceId, createdAt])
+}
+
+model TemperatureLog {
+  id        String   @id @default(cuid())
+  deviceId  String
+  tempC     Float
+  readAt    DateTime
+  createdAt DateTime @default(now())
+
+  @@index([deviceId, readAt])
+}
+
+// ==================== 容器 / 食材 ====================
 
 model Container {
   id        String   @id @default(cuid())
@@ -155,6 +121,7 @@ model FoodItem {
 model ScanLog {
   id           String   @id @default(cuid())
   deviceId     String
+  requestId    String?  @unique // 固件幂等键：网络重试不会重复入库
   memberId     String?
   action       String // in | out
   name         String
@@ -187,6 +154,8 @@ model FoodTrace {
   inTime    DateTime?
   createdAt DateTime  @default(now())
 }
+
+// ==================== 购物 / 通知 / 消耗 ====================
 
 model ShoppingListItem {
   id        String    @id @default(cuid())
@@ -237,6 +206,8 @@ model ConsumptionLog {
   createdAt DateTime @default(now())
 }
 
+// ==================== 菜谱 ====================
+
 model Recipe {
   id          String   @id @default(cuid())
   name        String   @unique
@@ -272,24 +243,4 @@ model RecipePreference {
   timesCooked  Int       @default(0)
   lastCookedAt DateTime?
   updatedAt    DateTime  @updatedAt
-}
-
-model DeviceLog {
-  id        String   @id @default(cuid())
-  deviceId  String
-  event     String
-  msg       String?
-  createdAt DateTime @default(now())
-
-  @@index([deviceId, createdAt])
-}
-
-model TemperatureLog {
-  id        String   @id @default(cuid())
-  deviceId  String
-  tempC     Float
-  readAt    DateTime
-  createdAt DateTime @default(now())
-
-  @@index([deviceId, readAt])
 }

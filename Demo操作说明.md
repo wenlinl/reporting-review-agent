@@ -6,14 +6,14 @@
 
 | 入口 | 链接 | 设备 |
 |---|---|---|
-| H5 手机端 | https://tuvmkt.com/shike-h5.html | 手机（iPhone 16 适配） |
-| 大屏版 | https://tuvmkt.com/shike-web.html | 电脑 / 投屏 |
+| H5 手机端 | https://shike.live/shike-h5.html | 手机（iPhone 16 适配） |
+| 大屏版 | https://shike.live/shike-web.html | 电脑 / 投屏 |
 | 代码仓库 | https://github.com/wenlinl/reporting-review-agent | — |
 
 ## 2. 环境依赖（重要）
 
 - 手机 / 电脑浏览器（Chrome / Safari 均可）；
-- **扫描功能需要摄像头权限 + 联网**（识别走云端 https://tuvmkt.com/api/scan，火山方舟视觉模型）；
+- **扫描功能需要摄像头权限 + 联网**（识别走云端 https://shike.live/api/scan，火山方舟视觉模型）；
 - 首页 / 库存 / 菜谱 / 我的等页面目前为演示数据（后端接口已就绪，扫描页为真实识别）；
 - 可选硬件演示：T5-E1 扫描台（放入 / 取出 → 3 秒倒计时 → 咔嚓 → 屏幕显示结果），数据与 H5 同一后端。
 

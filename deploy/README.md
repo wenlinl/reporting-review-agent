@@ -20,7 +20,7 @@ sudo bash deploy/setup-server.sh your-domain.com admin@example.com
 
 ## 2. 配置域名与 HTTPS（推荐）
 
-1. 注册域名（如 `midyear-workshop.com`），DNS A 记录指向服务器 IP
+1. 注册域名（如 `shike.com`），DNS A 记录指向服务器 IP
 2. 安装 nginx 与 certbot，申请证书：
 
 ```bash
@@ -50,7 +50,7 @@ docker compose exec app sh -c "mkdir -p data && touch data/app.db && npx prisma 
 
 ```bash
 # 备份数据目录（SQLite + 上传文件）
-docker run --rm -v midyear-workshop_app-data:/data -v $PWD:/backup alpine tar czf /backup/backup-$(date +%F).tar.gz /data
+docker run --rm -v shike_app-data:/data -v $PWD:/backup alpine tar czf /backup/backup-$(date +%F).tar.gz /data
 ```
 
 ## 环境变量

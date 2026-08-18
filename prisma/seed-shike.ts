@@ -10,7 +10,9 @@ async function main() {
     { name: "姐姐", role: "member", avatar: "👧", responsibleCategory: "零食", preferences: JSON.stringify(["清淡", "甜口"]) },
   ];
   for (const m of members) {
-    await prisma.member.upsert({ where: { name: m.name }, update: m, create: m });
+    const exist = await prisma.member.findFirst({ where: { name: m.name } });
+    if (exist) await prisma.member.update({ where: { id: exist.id }, data: m });
+    else await prisma.member.create({ data: m });
   }
 
   const containers = [

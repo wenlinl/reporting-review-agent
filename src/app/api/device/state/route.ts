@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { xzdJson, xzdOptions } from "@/lib/http";
+import { verifyDevice } from "@/lib/deviceAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,6 +12,10 @@ function startOfDay(d: Date) {
 
 export async function GET(req: NextRequest) {
   const deviceId = (req.nextUrl.searchParams.get("deviceId") || "xzd-t5e1-001").slice(0, 64);
+  const auth = await verifyDevice(req, deviceId);
+  if (!auth.ok) {
+    return xzdJson({ code: 401, msg: "设备鉴权失败" }, 401);
+  }
   const device = await prisma.device.findUnique({ where: { deviceId } });
   const rows = await prisma.foodItem.findMany({ where: { deviceId } });
   const today = startOfDay(new Date());

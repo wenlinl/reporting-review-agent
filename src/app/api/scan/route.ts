@@ -4,6 +4,9 @@ import { saveUpload } from "@/lib/files";
 import { prisma } from "@/lib/db";
 import { parseFoodPhoto } from "@/lib/xzdVision";
 import { xzdJson, xzdOptions } from "@/lib/http";
+import { verifyDevice } from "@/lib/deviceAuth";
+import { rateLimit } from "@/lib/rateLimit";
+import { getSession } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,9 +47,9 @@ function parseExpiry(s: string | null): Date | null {
 }
 
 /**
- * 硬件上传入口（T5-E1 固件调用）。契约：multipart，字段 image/deviceId/action/container/timestamp；
+ * 硬件上传入口（T5-E1 固件调用）。契约：multipart，字段 image/deviceId/action/container/timestamp/requestId；
  * 返回扁平 JSON：code/name/scannedAt/expiryDate/daysLeft/suggestedContainer/confidence/note/keepDays/stockTotal。
- * 原型阶段公开（设备无会话），上线前需设备级鉴权。
+ * 鉴权：X-Device-Token 请求头（与 Device.tokenHash 比对）；限流 + requestId 幂等。
  */
 export async function POST(req: NextRequest) {
   let parsed: Awaited<ReturnType<typeof parseMultipart>>;
@@ -65,6 +68,40 @@ export async function POST(req: NextRequest) {
   const action = f.action === "out" ? "out" : "in";
   const container = CONTAINERS.includes(f.container ?? "") ? f.container! : "冰箱";
   const deviceId = (f.deviceId || "xzd-t5e1-001").slice(0, 64);
+  const requestId = (f.requestId || "").slice(0, 80);
+
+  // 鉴权：固件走 X-Device-Token，H5 手机扫描走登录会话
+  const session = await getSession();
+  const devAuth = await verifyDevice(req, deviceId);
+  if (!devAuth.ok && !session) {
+    return xzdJson({ code: 401, msg: "设备鉴权失败" }, 401);
+  }
+  // 限流：每台设备每分钟最多 30 次
+  const rl = rateLimit(`scan:${deviceId}`, 30, 60_000);
+  if (!rl.ok) {
+    return xzdJson({ code: 429, msg: `请求过于频繁，请 ${rl.retryAfter}s 后重试` }, 429);
+  }
+
+  // 幂等：固件网络重试时按 requestId 去重，直接返回上一次结果
+  if (requestId) {
+    const dup = await prisma.scanLog.findUnique({ where: { requestId } });
+    if (dup) {
+      const stockTotal = await prisma.foodItem.count({ where: { deviceId } });
+      return xzdJson({
+        code: 0,
+        name: dup.name === "未识别" ? "" : dup.name,
+        scannedAt: fmtUtc(dup.scannedAt),
+        expiryDate: dup.expiryDate ? fmtDate(dup.expiryDate) : "",
+        daysLeft: dup.daysLeft,
+        suggestedContainer: dup.container,
+        confidence: dup.confidence,
+        keepDays: dup.keepDays,
+        stockTotal,
+        note: dup.note,
+        duplicated: true,
+      });
+    }
+  }
 
   let scannedAt = new Date();
   if (f.timestamp && /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}/.test(f.timestamp)) {
@@ -96,12 +133,18 @@ export async function POST(req: NextRequest) {
     : container;
   const note = item.note.slice(0, 96);
 
-  // 设备：不存在则创建，更新最后在线
-  const device = await prisma.device.upsert({
-    where: { deviceId },
-    update: { lastSeenAt: new Date() },
-    create: { deviceId, name: deviceId, lastSeenAt: new Date() },
-  });
+  // 设备（固件路径 verifyDevice 已刷新 lastSeenAt；H5 路径按需补建）
+  let device = devAuth.ok ? devAuth.device! : null;
+  if (!device) {
+    device = await prisma.device.upsert({
+      where: { deviceId },
+      update: { lastSeenAt: new Date() },
+      create: { deviceId, name: deviceId, lastSeenAt: new Date() },
+    });
+  }
+  const memberId = session
+    ? (await prisma.member.findUnique({ where: { userId: session.id } }))?.id || null
+    : device.memberId || null;
   await prisma.deviceLog.create({
     data: { deviceId, event: recognized ? "SCAN_OK" : "LOW_CONF", msg: name.slice(0, 100) || note.slice(0, 100) },
   });
@@ -148,14 +191,14 @@ export async function POST(req: NextRequest) {
             note,
             imagePath,
             scannedAt,
-            memberId: device.memberId || exist.memberId,
+            memberId: memberId || exist.memberId,
           },
         });
       } else {
         await prisma.foodItem.create({
           data: {
             deviceId,
-            memberId: device.memberId || null,
+            memberId,
             name,
             category,
             emoji,
@@ -187,8 +230,9 @@ export async function POST(req: NextRequest) {
 
   await prisma.scanLog.create({
     data: {
+      requestId: requestId || undefined,
       deviceId,
-      memberId: device.memberId || null,
+      memberId,
       action,
       name: recognized ? name : "未识别",
       category,

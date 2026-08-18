@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Mid-year Workshop 2026 · 汇报管理平台",
-  description: "PPT 评审、演讲录音转写与 AI 反馈",
+  title: "食刻 · 让每一餐都新鲜安心",
+  description: "冰箱食品保质期管理 · 智能扫描识别 · 家庭库存共享",
 };
 
 export default function RootLayout({

@@ -1,0 +1,27 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: 上传代码到服务器并重建
+        env:
+          SSH_HOST: ${{ secrets.SHIKE_SSH_HOST }}
+          SSH_PORT: ${{ secrets.SHIKE_SSH_PORT }}
+          SSH_USER: ${{ secrets.SHIKE_SSH_USER }}
+          SSH_KEY: ${{ secrets.SHIKE_SSH_KEY }}
+          DEPLOY_DIR: ${{ secrets.SHIKE_DEPLOY_DIR }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          tar czf - --exclude='node_modules' --exclude='.next' --exclude='data' src prisma public scripts Dockerfile docker-compose.yml next.config.ts package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json .env.example \
+            | ssh -p "${SSH_PORT:-2222}" -o StrictHostKeyChecking=accept-new -i ~/.ssh/deploy_key "${SSH_USER:-root}@${SSH_HOST}" \
+                "mkdir -p ${DEPLOY_DIR:-/opt/shike} && tar xzf - -C ${DEPLOY_DIR:-/opt/shike} && cd ${DEPLOY_DIR:-/opt/shike} && docker compose up -d --build"

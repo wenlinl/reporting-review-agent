@@ -1,6 +1,9 @@
+name: shike
+
 services:
   app:
     build: .
+    container_name: shike-app-1
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -17,3 +20,4 @@ services:
 
 volumes:
   app-data:
+    name: shike_app-data # 沿用现有数据卷，避免部署时丢失生产数据

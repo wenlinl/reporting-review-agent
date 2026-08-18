@@ -28,11 +28,13 @@
   --shadow-sm:0 4px 14px rgba(126,86,57,.07);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html{-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%;height:100%}
+html,body{height:100%;overflow:hidden}
 body{
   font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",-apple-system,"Segoe UI",sans-serif;
   background:var(--bg); color:var(--ink);
-  padding-top:calc(env(safe-area-inset-top) + 106px);
+  padding-top:calc(env(safe-area-inset-top) + 40px);
+  overflow:hidden;
   padding-bottom:calc(env(safe-area-inset-bottom) + 104px);
   -webkit-font-smoothing:antialiased;
 }
@@ -50,8 +52,9 @@ a{cursor:pointer}
 
 /* ---------- 品牌栏 ---------- */
 .brandbar{
-  position:fixed;top:calc(env(safe-area-inset-top) + 40px);left:0;right:0;z-index:40;
-  background:rgba(248,241,233,.94);backdrop-filter:blur(12px);
+  max-width:480px;margin:0 auto;height:64px;
+  background:linear-gradient(135deg,#fae7e1,#fdf3ef);
+  border-bottom:1px solid rgba(212,47,31,.18);
 }
 .brandbar .in{max-width:480px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:10px 18px}
 .brand{line-height:1.15}
@@ -64,16 +67,16 @@ a{cursor:pointer}
 .avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#f6c8a8,#e8a37f);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:var(--shadow-sm)}
 
 /* ---------- 布局 ---------- */
-main{padding:8px 16px 0}
+main{position:absolute;top:calc(env(safe-area-inset-top) + 104px);bottom:calc(env(safe-area-inset-bottom) + 78px);left:50%;transform:translateX(-50%);width:100%;max-width:480px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 16px 20px}
 .page{display:none}
 .page.active{display:block;animation:fadeUp .28s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.page-head{display:flex;align-items:flex-end;justify-content:space-between;margin:4px 2px 12px}
+.page-head{position:sticky;top:-8px;z-index:5;display:flex;align-items:flex-end;justify-content:space-between;margin:-8px -16px 10px;padding:8px 16px 12px;background:var(--bg);border-bottom:1px solid rgba(239,227,213,.75)}
 .page-head .t{font-size:24px;font-weight:800;color:var(--red);letter-spacing:.5px}
 .page-head .s{font-size:12px;color:var(--ink-2);margin-top:4px;letter-spacing:.2px}
 .page-head .acts{display:flex;align-items:center;gap:8px}
 .page-head .icon-btn{width:38px;height:38px;border-radius:13px}
-.greet{font-size:24px;font-weight:800;color:var(--ink);margin:6px 2px 12px;letter-spacing:.5px}
+.greet{position:sticky;top:-8px;z-index:5;font-size:24px;font-weight:800;color:var(--ink);margin:-8px -16px 12px;padding:8px 16px 12px;background:var(--bg);letter-spacing:.5px;border-bottom:1px solid rgba(239,227,213,.75)}
 
 /* ---------- 首页：冰箱总览 ---------- */
 .fridge{position:relative;overflow:hidden;background:linear-gradient(135deg,#ef5a41,#d42f1f);border-radius:26px;padding:18px;color:#fff;display:flex;justify-content:space-between;gap:12px;box-shadow:0 14px 28px rgba(212,47,31,.26);margin-bottom:12px}
@@ -287,7 +290,15 @@ main{padding:8px 16px 0}
 .app-footer{text-align:center;font-size:10.5px;color:#c0ad9a;margin-top:22px;letter-spacing:.5px}
 
 /* ---------- 底部悬浮 Tab 栏 ---------- */
-.tabbar{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 10px);padding:0 14px;z-index:30}
+  /* ---- 妙用（整合页）---- */
+  .hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  .hub-card{border:1px solid var(--line);border-radius:13px;background:#fff;padding:13px 14px;text-align:left;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;gap:3px;box-shadow:var(--shadow)}
+  .hub-card:active{transform:scale(.98)}
+  .hub-card .h-ic{font-size:22px}
+  .hub-card .h-t{font-size:14px;font-weight:700;color:var(--ink)}
+  .hub-card .h-s{font-size:11px;color:var(--ink-2)}
+  .hub-card .h-n{align-self:flex-start;font-size:11px;color:var(--green);background:var(--green-soft);border-radius:999px;padding:1px 8px;margin-top:2px}
+  .tabbar{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 10px);padding:0 14px;z-index:30}
 .tabbar .in{max-width:452px;margin:0 auto;background:var(--card);border-radius:26px;box-shadow:0 12px 32px rgba(126,86,57,.18);border:1px solid rgba(239,227,213,.85);display:flex;height:66px;padding:7px 4px}
 .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:0;background:none;color:var(--ink-2);font-size:10px;border-radius:18px;transition:.2s}
 .tab .ic{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:11px;color:#a79787}
@@ -295,10 +306,10 @@ main{padding:8px 16px 0}
 .tab.active .ic{background:#fde7e2;color:var(--red)}
 
 /* ---------- 子页面（弹层） ---------- */
-.subview{position:fixed;inset:0;z-index:45;background:var(--bg);display:none;margin:0 auto;max-width:480px}
+.subview{position:fixed;top:calc(env(safe-area-inset-top) + 104px);left:0;right:0;bottom:0;z-index:45;background:var(--bg);display:none;margin:0 auto;max-width:480px;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .subview.open{display:block;animation:slideIn .26s ease}
 @keyframes slideIn{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
-.sv-head{position:sticky;top:0;z-index:2;background:rgba(248,241,233,.96);backdrop-filter:blur(10px);padding:calc(env(safe-area-inset-top) + 14px) 16px 10px;display:flex;align-items:center;gap:10px}
+.sv-head{position:sticky;top:0;z-index:2;background:rgba(248,241,233,.96);backdrop-filter:blur(10px);padding:14px 16px 10px;display:flex;align-items:center;gap:10px}
 .back-btn{width:36px;height:36px;border-radius:50%;background:#fff;border:1px solid var(--line);color:var(--ink);font-size:19px;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-sm);flex:none;line-height:1}
 .sv-title{font-size:19px;font-weight:800;color:var(--ink);flex:1}
 .sv-right{flex:none}
@@ -318,6 +329,15 @@ main{padding:8px 16px 0}
 .shop-qty{display:flex;align-items:center;gap:7px;color:var(--ink-2);font-size:13px}
 .qty-btn{width:25px;height:25px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--ink);display:flex;align-items:center;justify-content:center;font-size:14px}
 .shop-add{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.shop-add-row{display:flex;gap:8px;margin-bottom:12px;align-items:center}
+.shop-add-row input{flex:1;min-width:0;border:1.5px solid var(--line);border-radius:999px;padding:10px 16px;font-size:14px;background:#fff;color:var(--ink);outline:none;box-shadow:inset 0 1px 3px rgba(126,86,57,.05)}
+.shop-add-row input:focus{border-color:var(--red)}
+.shop-add-row .btn-primary{margin-top:0;width:auto;min-width:88px;padding:10px 16px;font-size:14px;border-radius:999px}
+.shop-del{margin-left:auto;border:0;background:none;color:var(--ink-2);font-size:15px;padding:2px 4px}
+.arch-link{display:block;width:100%;margin:0 0 12px;padding:10px 14px;border:1px dashed rgba(47,158,99,.45);border-radius:14px;background:rgba(47,158,99,.06);color:var(--green);font-size:12.5px;font-weight:600;text-align:left;cursor:pointer}
+.expire-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.expire-grid .btn-outline,.expire-grid .btn-primary{margin-top:0;width:100%;min-height:46px;height:46px;padding:8px 6px;font-size:13px;display:flex;align-items:center;justify-content:center;line-height:1.2}
+.arch-btn{flex:none;width:auto;min-width:76px;background:#fff;color:var(--green);border:1px solid var(--green);border-radius:999px;padding:7px 14px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center}
 .sug-chip{display:inline-flex;align-items:center;gap:4px;background:var(--amber-soft);color:#b06f1d;font-size:11px;padding:6px 12px;border-radius:999px;border:0}
 
 /* 保鲜提醒 / 通知 */
@@ -391,10 +411,113 @@ main{padding:8px 16px 0}
 /* ---------- Toast ---------- */
 .toast{position:fixed;left:50%;bottom:100px;transform:translate(-50%,16px);background:rgba(52,36,26,.93);color:#fff;font-size:13px;padding:11px 20px;border-radius:999px;opacity:0;pointer-events:none;transition:.28s;z-index:60;white-space:nowrap;box-shadow:0 8px 22px rgba(0,0,0,.22)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ================= 动态 UI 增强 ================= */
+.brandbar{background:linear-gradient(120deg,#fae7e1,#fdf3ef 25%,#f7d9d1 50%,#fdf3ef 75%,#fae7e1);background-size:320% 100%;animation:skFlow 7s ease infinite}
+@keyframes skFlow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.fridge{animation:skRise .55s cubic-bezier(.22,.9,.3,1) both,skGlow 3.4s ease-in-out 1.1s infinite}
+@keyframes skGlow{0%,100%{box-shadow:0 14px 28px rgba(212,47,31,.26)}50%{box-shadow:0 14px 36px rgba(212,47,31,.45)}}
+.page.active .duo{animation:skRise .5s cubic-bezier(.22,.9,.3,1) both}
+.page.active .duo:nth-child(3){animation-delay:.08s}
+.page.active .duo:nth-child(4){animation-delay:.16s}
+@keyframes skRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.tab.active .ic{animation:skPop .38s cubic-bezier(.2,1.4,.4,1)}
+@keyframes skPop{0%{transform:scale(1)}45%{transform:scale(1.16) rotate(-4deg)}100%{transform:scale(1)}}
+.icon-btn .dot{animation:skDot 1.8s ease-out infinite}
+@keyframes skDot{0%{box-shadow:0 0 0 0 rgba(226,60,43,.45)}70%{box-shadow:0 0 0 8px rgba(226,60,43,0)}100%{box-shadow:0 0 0 0 rgba(226,60,43,0)}}
+.result:not(.hide){animation:skPopIn .5s cubic-bezier(.2,1.3,.4,1) both}
+@keyframes skPopIn{0%{opacity:0;transform:scale(.82) translateY(12px)}100%{opacity:1;transform:none}}
+.half,.qcell,.qic,.chip,.icon-btn,.btn-primary,.btn-ghost,.btn-outline,.fridge-link,.tab{transition:transform .18s ease,box-shadow .18s ease}
+@media(hover:hover){
+  .half:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+  .qcell:hover .qic{transform:translateY(-3px) scale(1.06);box-shadow:var(--shadow)}
+}
+.half:active,.qcell:active,.chip:active,.icon-btn:active,.fridge-link:active{transform:scale(.96)}
+
+/* ---------- 登录 / 注册 ---------- */
+.auth-screen{position:fixed;inset:0;z-index:80;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto}
+.auth-screen.hidden{display:none}
+.auth-card{width:100%;max-width:400px;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:30px 24px;box-shadow:var(--shadow)}
+.auth-logo{width:64px;height:64px;border-radius:22px;background:linear-gradient(135deg,#f6c8a8,#e23c2b);display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 12px;box-shadow:0 10px 24px rgba(226,60,43,.28)}
+.auth-title{font-size:23px;font-weight:800;color:var(--ink);text-align:center;letter-spacing:.5px}
+.auth-sub{font-size:12px;color:var(--ink-2);text-align:center;margin-top:6px;line-height:1.6}
+.auth-tabs{display:flex;margin:22px 0 18px;background:var(--bg);border-radius:12px;padding:4px;gap:4px}
+.auth-tab{flex:1;padding:9px 0;border-radius:9px;font-size:14px;font-weight:600;color:var(--ink-2);background:transparent;border:none;transition:.2s}
+.auth-tab.on{background:#fff;color:var(--red);box-shadow:var(--shadow-sm)}
+.auth-field{margin-bottom:14px}
+.auth-field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink);margin-bottom:6px}
+.auth-field input{width:100%;border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px 14px;font-size:14px;color:var(--ink);outline:none;transition:.2s}
+.auth-field input:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(226,60,43,.10)}
+.auth-err{background:#fdece9;border:1px solid #f5c6bd;color:var(--red-deep);font-size:12.5px;border-radius:10px;padding:9px 12px;margin-bottom:12px;display:none}
+.auth-err.show{display:block}
+.auth-btn{width:100%;border:none;border-radius:12px;background:linear-gradient(135deg,#e23c2b,#c93122);color:#fff;font-size:15px;font-weight:700;padding:13px 0;box-shadow:0 8px 18px rgba(226,60,43,.28);transition:.2s}
+.auth-btn:disabled{opacity:.6}
+.auth-guest{text-align:center;margin-top:14px;font-size:12.5px;color:var(--ink-2)}
+.auth-guest button{background:none;border:none;color:var(--ink-2);text-decoration:underline;font-size:12.5px}
+.auth-foot{margin-top:24px;text-align:center;font-size:11px;color:var(--ink-2);letter-spacing:.2px}
+.account-card{display:flex;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(135deg,#fae7e1,#fdf3ef);border:1px solid rgba(212,47,31,.16);border-radius:16px;padding:12px 14px;margin-bottom:10px}
+.account-card .ac-l{display:flex;align-items:center;gap:10px;min-width:0}
+.account-card .ac-av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#f6c8a8,#e8a37f);display:flex;align-items:center;justify-content:center;font-size:16px;flex:none}
+.account-card .ac-name{font-size:13.5px;font-weight:700;color:var(--ink)}
+.account-card .ac-mail{font-size:11px;color:var(--ink-2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px}
+.account-card .ac-btn{border:none;border-radius:999px;background:var(--red);color:#fff;font-size:12px;font-weight:600;padding:8px 14px;flex:none}
+.account-card .ac-btn.ghost{background:#fff;border:1px solid rgba(212,47,31,.35);color:var(--red)}
 </style>
 </head>
 <body>
 <div class="phone">
+
+  <!-- 登录 / 注册 -->
+  <div class="auth-screen" id="authScreen">
+    <div class="auth-card">
+      <div class="auth-logo">🍽️</div>
+      <div class="auth-title">食刻</div>
+      <div class="auth-sub">登录后同步家庭库存 · 让每一餐都新鲜安心</div>
+      <div class="auth-tabs">
+        <button class="auth-tab on" id="authTabLogin">登录</button>
+        <button class="auth-tab" id="authTabRegister">注册</button>
+      </div>
+
+      <form id="loginForm">
+        <div class="auth-field">
+          <label>邮箱</label>
+          <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email" required>
+        </div>
+        <div class="auth-field">
+          <label>密码</label>
+          <input type="password" id="loginPassword" placeholder="至少 6 位" autocomplete="current-password" required>
+        </div>
+        <div class="auth-err" id="loginErr"></div>
+        <button class="auth-btn" type="submit" id="loginBtn">登 录</button>
+      </form>
+
+      <form id="regForm" style="display:none">
+        <div class="auth-field">
+          <label>姓名</label>
+          <input type="text" id="regName" placeholder="怎么称呼你" autocomplete="name" maxlength="50" required>
+        </div>
+        <div class="auth-field">
+          <label>邮箱</label>
+          <input type="email" id="regEmail" placeholder="you@example.com" autocomplete="email" required>
+        </div>
+        <div class="auth-field">
+          <label>密码</label>
+          <input type="password" id="regPassword" placeholder="至少 6 位" autocomplete="new-password" minlength="6" required>
+        </div>
+        <div class="auth-field">
+          <label>确认密码</label>
+          <input type="password" id="regConfirm" placeholder="再次输入密码" autocomplete="new-password" minlength="6" required>
+        </div>
+        <div class="auth-err" id="regErr"></div>
+        <button class="auth-btn" type="submit" id="regBtn">注 册</button>
+      </form>
+
+      <div class="auth-guest">
+        <button id="guestBtn">先逛逛（游客模式）</button>
+      </div>
+      <div class="auth-foot">食刻 · 让每一餐都新鲜安心</div>
+    </div>
+  </div>
 
   <!-- 状态栏 -->
   <div class="statusbar">
@@ -429,11 +552,13 @@ main{padding:8px 16px 0}
   <main>
     <!-- ============ 首页 ============ -->
     <section class="page active" id="page-home">
-      <div class="greet">你好，今天的冰箱状态</div>
+      <div class="page-head">
+        <div><div class="t">你好，今天的冰箱状态</div><div class="s">今天也要好好吃饭 · 让每一餐都新鲜安心</div></div>
+      </div>
 
       <div class="fridge">
         <div class="fridge-left">
-          <div class="fridge-head">冰箱总览 <span class="upd">更新于 08:30</span></div>
+          <div class="fridge-head">冰箱总览 <span class="upd" id="updAt">同步中…</span></div>
           <div class="fridge-stats">
             <div class="fs"><b><span id="kpiTotal">12</span><small> 种</small></b><em>今日库存食材</em></div>
             <div class="fs"><b><span id="kpiSoon">3</span><small> 种</small></b><em>即将过期</em></div>
@@ -477,7 +602,7 @@ main{padding:8px 16px 0}
         </div>
         <div class="half blue">
           <h3>家庭共享</h3>
-          <div class="fam-stat">已同步 4 位成员</div>
+          <div class="fam-stat" id="famStat">成员同步中…</div>
           <div class="f-desc">一起管理，一起安心</div>
           <span class="f-link" data-view="members">查看成员 ›</span>
         </div>
@@ -542,7 +667,9 @@ main{padding:8px 16px 0}
           <button class="icon-btn filter-btn" id="sortBtn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
           </button>
-          <div class="avatar" style="width:38px;height:38px;font-size:17px">👩</div>
+          <button class="icon-btn filter-btn" id="invFilterBtn" aria-label="筛选">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6 7v5l-4 2v-7z"/></svg>
+          </button>
         </div>
       </div>
 
@@ -572,6 +699,8 @@ main{padding:8px 16px 0}
         </div>
       </div>
 
+      <button class="arch-link" data-view="archived">🗂️ 已处理记录 <span id="archN">0</span> 件 ›</button>
+
       <div class="chips-wrap">
         <div class="chips-row" id="invChips"></div>
         <button class="filter-btn" id="sortBtn2">
@@ -595,9 +724,18 @@ main{padding:8px 16px 0}
     <!-- ============ 菜谱 ============ -->
     <section class="page" id="page-recipe">
       <div class="page-head">
-        <div><div class="t">智能菜谱</div><div class="s">根据库存智能推荐，减少浪费</div></div>
+        <div><div class="t">妙用 · 生活灵感</div><div class="s">购物清单 · 菜谱 · 营养 · 浪费统计，一个入口全搞定</div></div>
         <button class="fav-pill" data-view="favorites"><b>♥</b>我的收藏</button>
       </div>
+
+      <div class="hub-grid">
+        <button class="hub-card" data-view="shop"><span class="h-ic">🛒</span><span class="h-t">购物清单</span><span class="h-s">待采购一键管理</span><span class="h-n" id="hubShopN">—</span></button>
+        <button class="hub-card" data-view="nutrition"><span class="h-ic">🥗</span><span class="h-t">营养档案</span><span class="h-s">四大营养素概览</span></button>
+        <button class="hub-card" data-view="waste"><span class="h-ic">🗑️</span><span class="h-t">浪费统计</span><span class="h-s">消耗 / 浪费 / 过期记录</span><span class="h-n" id="hubWasteN">—</span></button>
+        <button class="hub-card" data-view="prefs"><span class="h-ic">🌶️</span><span class="h-t">口味偏好</span><span class="h-s">推荐更懂你</span></button>
+      </div>
+
+      <div class="sec-head" style="margin-top:2px"><b>菜谱灵感</b><span style="font-size:11px;color:var(--ink-2);font-weight:400">根据库存智能推荐，减少浪费</span></div>
 
       <div class="cream-panel">
         <div class="panel-head"><b>当前可用食材</b><a data-goto="inv">查看全部 ›</a></div>
@@ -614,15 +752,6 @@ main{padding:8px 16px 0}
       <div class="sec-head"><b>更多推荐</b><a id="shuffleBtn">换一批 ↻</a></div>
       <div id="moreList"></div>
 
-      <div class="cream-panel prefs">
-        <div class="panel-head"><b>口味偏好</b><a data-view="prefs">编辑偏好 ›</a></div>
-        <div class="pref-row" id="prefRow">
-          <button class="pref green active">清淡</button>
-          <button class="pref orange">家常</button>
-          <button class="pref red">微辣</button>
-        </div>
-        <div class="pref-caption">调整口味偏好，获得更精准的菜谱推荐</div>
-      </div>
     </section>
 
     <!-- ============ 我的 ============ -->
@@ -631,11 +760,22 @@ main{padding:8px 16px 0}
         <div><div class="t">我的</div><div class="s">家庭食材，一起管理</div></div>
       </div>
 
+      <div class="account-card" id="accountCard">
+        <div class="ac-l">
+          <div class="ac-av" id="acAvatar">👤</div>
+          <div>
+            <div class="ac-name" id="acName">未登录</div>
+            <div class="ac-mail" id="acMail">登录后同步家庭数据</div>
+          </div>
+        </div>
+        <button class="ac-btn" id="acBtn">登录 / 注册</button>
+      </div>
+
       <button class="profile" data-view="members">
-        <div class="avatar-lg">👩</div>
+        <div class="avatar-lg" id="pfAvatar">👤</div>
         <div>
-          <div class="pf-name">妈妈<span class="pf-badge">家庭管理员</span></div>
-          <div class="pf-sub">已绑定 4 位成员 · 冰箱 / 零食柜 / 药盒</div>
+          <div class="pf-name" id="pfName">未登录</div>
+          <div class="pf-sub" id="pfSub">登录后同步家庭数据</div>
         </div>
         <span class="pf-arrow">›</span>
       </button>
@@ -664,6 +804,7 @@ main{padding:8px 16px 0}
         <button class="menu-item" data-view="favorites"><span class="mi-ic" style="background:#fde3dc">❤️</span>我的收藏<span class="mi-arrow">›</span></button>
         <button class="menu-item" data-view="notif"><span class="mi-ic" style="background:#dcefdc">🔔</span>通知设置<span class="mi-arrow">›</span></button>
         <button class="menu-item" data-view="nutrition"><span class="mi-ic" style="background:#ddebfa">🥗</span>营养档案<span class="mi-arrow">›</span></button>
+        <button class="menu-item" data-view="prefs"><span class="mi-ic" style="background:#fdf3e0">🌶️</span>口味偏好<span class="mi-arrow">›</span></button>
         <button class="menu-item" id="helpItem"><span class="mi-ic" style="background:#f2e6d8">💬</span>帮助与反馈<span class="mi-arrow">›</span></button>
         <button class="menu-item" id="aboutItem"><span class="mi-ic" style="background:#f2e6d8">ℹ️</span>关于食刻<span class="mi-arrow">›</span></button>
       </div>
@@ -695,7 +836,7 @@ main{padding:8px 16px 0}
         <span class="ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="M12 3.5v17"/><path d="M7.5 7h2M7.5 10.5h2"/><path d="M14.5 15.5h2M14.5 19h2"/></svg></span>库存
       </button>
       <button class="tab" data-page="recipe">
-        <span class="ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 11a4.5 4.5 0 013.2-7.6A4.6 4.6 0 0117 4.4a4.5 4.5 0 011.5 6.6"/><path d="M5 11h14l1.2 5.5H3.8z"/><path d="M7 16.5h10V21H7z"/></svg></span>菜谱
+        <span class="ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 014.24 10.24c-.7.7-1.24 1.54-1.24 2.26V16h-6v-.5c0-.72-.54-1.56-1.24-2.26A6 6 0 0112 3z"/></svg></span>妙用
       </button>
       <button class="tab" data-page="me">
         <span class="ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M8.7 14.8a4.3 4.3 0 006.6 0"/><path d="M9.2 10h.01M14.8 10h.01"/></svg></span>我的
@@ -708,88 +849,27 @@ main{padding:8px 16px 0}
 
 <script>
 /* ================= 数据 ================= */
-const NOW = new Date("2026-08-16T08:30:00");
+const NOW = new Date();
 
-let INV = [
-  { name:"西兰花", cat:"蔬菜", emoji:"🥦", by:"妈妈", av:"👩", when:"今天 08:30", exp:"2026-08-17", storage:"保鲜中" },
-  { name:"牛奶",   cat:"乳品", emoji:"🥛", by:"爷爷", av:"👴", when:"昨天 21:10", exp:"2026-08-23", storage:"保鲜中", label:"建议尽快喝" },
-  { name:"鸡蛋",   cat:"蛋类", emoji:"🥚", by:"姐姐", av:"👧", when:"昨天 18:45", exp:"2026-08-26", storage:"新鲜" },
-  { name:"生菜",   cat:"蔬菜", emoji:"🥬", by:"妈妈", av:"👩", when:"昨天 12:20", exp:"2026-08-19", storage:"保鲜中" },
-  { name:"牛肉",   cat:"肉类", emoji:"🥩", by:"爸爸", av:"👨", when:"前天 19:35", exp:"2026-08-17", storage:"冷藏中" },
-  { name:"番茄",   cat:"蔬菜", emoji:"🍅", by:"妈妈", av:"👩", when:"前天 08:10", exp:"2026-08-17", storage:"保鲜中" },
-  { name:"黄瓜",   cat:"蔬菜", emoji:"🥒", by:"爸爸", av:"👨", when:"08-14 17:20", exp:"2026-08-21", storage:"保鲜中" },
-  { name:"酸奶",   cat:"乳品", emoji:"🥣", by:"姐姐", av:"👧", when:"08-13 20:45", exp:"2026-08-21", storage:"保鲜中" },
-  { name:"鸡胸肉", cat:"肉类", emoji:"🍗", by:"爸爸", av:"👨", when:"08-13 19:00", exp:"2026-08-19", storage:"冷冻中" },
-  { name:"苹果",   cat:"水果", emoji:"🍎", by:"妈妈", av:"👩", when:"08-12 09:30", exp:"2026-08-23", storage:"常温" },
-  { name:"面包",   cat:"零食", emoji:"🍞", by:"姐姐", av:"👧", when:"08-11 15:20", exp:"2026-08-19", storage:"常温" },
-  { name:"大米",   cat:"主食", emoji:"🍚", by:"爸爸", av:"👨", when:"08-10 10:00", exp:"2026-09-05", storage:"主食柜" }
-];
+// 所有数据均来自后端接口（登录后同步）；加载失败/未登录时保持空态
+let INV = [];
+let RECIPES = [];
 
-const RECIPES = [
-  { name:"西兰花炒蛋", time:"15 分钟", tag:"清淡", tcls:"tag-green", desc:"西兰花脆嫩，鸡蛋滑嫩，营养丰富", nutr:"蛋白质高·维生素丰富·低脂健康", emoji:"🥦🍳", grad:"radial-gradient(circle at 34% 28%,#fffdf7,#d9e6bf 75%)",
-    ing:[["西兰花","1 朵","有"],["鸡蛋","2 个","有"],["小葱","1 把","缺"]],
-    steps:["西兰花切小朵，淡盐水焯 30 秒捞出","鸡蛋加少许盐打散，热油炒至凝固盛出","蒜末爆香，下西兰花大火翻炒 1 分钟","倒入鸡蛋，加盐调味翻匀即可"] },
-  { name:"牛肉蔬菜汤", time:"30 分钟", tag:"家常", tcls:"tag-orange", desc:"牛肉鲜美，蔬菜清甜，暖胃又营养", nutr:"高蛋白·铁质丰富·增强免疫力", emoji:"🍲", grad:"radial-gradient(circle at 34% 28%,#fff8ec,#f0dcc0 78%)",
-    ing:[["牛肉","200g","有"],["番茄","1 个","有"],["胡萝卜","1 根","缺"]],
-    steps:["牛肉切块冷水下锅焯去浮沫","番茄切块与牛肉同煮 20 分钟","加入胡萝卜块再煮 10 分钟","盐和胡椒调味即可"] },
-  { name:"奶香蔬菜浓汤", time:"20 分钟", tag:"清淡", tcls:"tag-blue", desc:"奶香浓郁，口感顺滑，适合全家", nutr:"钙质丰富·易消化·增强骨骼健康", emoji:"🥣", grad:"radial-gradient(circle at 34% 28%,#fbf7ff,#e2dcf0 78%)",
-    ing:[["牛奶","300ml","有"],["西兰花","半朵","有"],["土豆","1 个","缺"]],
-    steps:["土豆蒸熟压成泥","西兰花焯水后切碎","牛奶小火加热，拌入土豆泥","加入西兰花碎，搅匀调味"] },
-  { name:"番茄炒蛋", time:"10 分钟", tag:"家常", tcls:"tag-orange", desc:"酸甜开胃，色泽诱人，下饭首选", nutr:"维生素C·蛋白质·低脂健康", emoji:"🍅🍳", grad:"radial-gradient(circle at 34% 28%,#fff6ee,#f6d8c8 78%)",
-    ing:[["番茄","2 个","有"],["鸡蛋","2 个","有"],["小葱","1 把","缺"]],
-    steps:["番茄切块，鸡蛋打散","鸡蛋炒至凝固盛出","番茄炒出汁后回锅鸡蛋","加糖盐调味，撒葱花"] },
-  { name:"牛奶燕麦粥", time:"15 分钟", tag:"清淡", tcls:"tag-green", desc:"奶香丝滑，暖胃又饱腹", nutr:"钙质丰富·膳食纤维·易消化", emoji:"🥛🌾", grad:"radial-gradient(circle at 34% 28%,#fffdf5,#e9e0c8 78%)",
-    ing:[["牛奶","250ml","有"],["燕麦片","50g","缺"]],
-    steps:["牛奶小火加热至微沸","加入燕麦片搅拌 5 分钟","关火焖 3 分钟","依口味加蜂蜜"] },
-  { name:"蒜蓉西兰花", time:"12 分钟", tag:"家常", tcls:"tag-orange", desc:"清爽脆嫩，蒜香扑鼻", nutr:"维生素丰富·低脂·抗氧化", emoji:"🥦", grad:"radial-gradient(circle at 34% 28%,#f7fff2,#cfe3b8 78%)",
-    ing:[["西兰花","1 朵","有"],["大蒜","3 瓣","缺"]],
-    steps:["西兰花掰小朵焯水","蒜末爆香","下西兰花大火快炒","盐调味出锅"] }
-];
-
-const SHOP = [
-  { name:"牛奶", qty:1, unit:"瓶", done:false },
-  { name:"鸡蛋", qty:6, unit:"个", done:false },
-  { name:"生菜", qty:1, unit:"颗", done:false },
-  { name:"小葱", qty:1, unit:"把", done:true }
-];
+const SHOP = [];
 const SHOP_SUGGEST = ["小葱","香菜","燕麦片","香菇"];
 
-const MEMBERS = [
-  { av:"👩", name:"妈妈", role:"管理员", meta:"本月录入 24 次 · 负责蔬菜", bg:"linear-gradient(135deg,#f6c8a8,#e8a37f)" },
-  { av:"👨", name:"爸爸", role:"成员", meta:"本月录入 16 次 · 负责肉类", bg:"linear-gradient(135deg,#bcd4f0,#8fb0d8)" },
-  { av:"👴", name:"爷爷", role:"成员", meta:"本月录入 9 次 · 负责乳品", bg:"linear-gradient(135deg,#e4d9c6,#cbb9a0)" },
-  { av:"👧", name:"姐姐", role:"成员", meta:"本月录入 12 次 · 负责零食", bg:"linear-gradient(135deg,#f6c9d4,#eba9bb)" }
-];
-
-const NOTIFS = [
-  { ic:"🔔", bg:"#fde3dc", t:"2 种食材今天到期", d:"西兰花、牛肉建议今日食用", unread:true, view:"remind" },
-  { ic:"🍳", bg:"#e2f0e5", t:"今日推荐 · 西兰花炒蛋", d:"使用库存食材即可完成", unread:true, view:"recipe:0" },
-  { ic:"👩", bg:"#fdf0cd", t:"妈妈录入了 2 种食材", d:"番茄、黄瓜已同步到家庭库存", unread:false, view:"inv" },
-  { ic:"🛒", bg:"#ddebfa", t:"购物清单有 1 项待买", d:"小葱 · 已加入清单", unread:false, view:"shop" }
-];
-
-const LOG = [
-  { act:"补给", cls:"in", d:"西兰花 · 妈妈摄像头扫描录入", t:"今天 08:30" },
-  { act:"补给", cls:"in", d:"牛奶 · 爷爷手动录入", t:"昨天 21:10" },
-  { act:"取出", cls:"out", d:"番茄 · 爸爸做晚餐", t:"昨天 19:00" },
-  { act:"提醒", cls:"sys", d:"系统推送：4 样临期食材", t:"昨天 08:00" },
-  { act:"过期", cls:"exp", d:"豆腐 · 已清理并记录", t:"前天 20:15" }
-];
-const NUTR = [["蛋白质",78],["维生素C",62],["膳食纤维",45],["钙",58]];
-const TRACE = {
-  name:"西兰花", source:"盒马鲜生 · 云南基地直采", batch:"YN20260812-A3",
-  inTime:"2026-08-14 16:20", cold:"全程 4°C 冷链运输", report:"农残检测 ✓ 合格"
-};
+// 服务端数据（登录后加载）
+let SRV_MEMBERS = [];
+let SRV_NOTIFS = [];
+let SRV_LOGS = [];
+let SRV_TRACE = null;
+let SRV_PREFS = [];
 
 const QUICK = [
   { t:"扫描食材", i:"📷", c:"qc1", v:"tab:scan" },
-  { t:"智能推荐", i:"✨", c:"qc2", ai:true, v:"recipe:0:AI 为你推荐" },
   { t:"营养分析", i:"🥗", c:"qc3", sub:"均衡膳食", v:"view:nutrition" },
   { t:"食材履历", i:"📋", c:"qc4", sub:"来源可查", v:"view:log" },
-  { t:"快速录入", i:"⚡", c:"qc1", v:"view:quickAdd" },
-  { t:"菜谱灵感", i:"🍳", c:"qc2", v:"tab:recipe" },
-  { t:"吃得更健康", i:"🌱", c:"qc3", v:"recipe:2:健康清淡推荐" },
-  { t:"追溯记录", i:"🧾", c:"qc4", v:"view:trace" }
+  { t:"快速录入", i:"⚡", c:"qc1", v:"view:quickAdd" }
 ];
 const CAT_EMOJI = { 蔬菜:"🥬", 乳品:"🥛", 肉类:"🥩", 蛋类:"🥚", 水果:"🍎", 零食:"🍞", 主食:"🍚", 其他:"🥫" };
 const AV_MAP = { 妈妈:"👩", 爸爸:"👨", 爷爷:"👴", 姐姐:"👧" };
@@ -800,9 +880,16 @@ const RECIPE_FOR = { 西兰花:0, 牛肉:1, 番茄:3, 牛奶:4, 生菜:0, 鸡胸
 let activeCat = "全部", query = "", sortMode = "days";
 let moreIdx = 0;
 const FAVS = new Set();
-const PREF_SEL = new Set(["清淡"]);
+const PREF_SEL = new Set();
 const HANDLED = new Set();
 let currentView = null;
+let FILTER_CATS = new Set();
+let FILTER_STATUS = "";
+let SRV_SHOP = null;
+let WASTE = { logs: [], summary: { consumed: 0, wasted: 0, expired: 0, total: 0 } };
+let SRV_RECIPES = false;
+let ARCHIVED = [];
+let NUTR_SRV = null;
 
 /* ================= 工具 ================= */
 function daysLeft(exp){
@@ -834,7 +921,7 @@ function go(page){
   document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.page === page));
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.getElementById("page-" + page).classList.add("active");
-  window.scrollTo(0, 0);
+  const m = document.querySelector("main"); if (m) m.scrollTop = 0;
   if (page !== "scan") pauseAutoScan(); else resumeAutoScan();
   try { history.replaceState(null, "", "#" + page); } catch(e){}
 }
@@ -842,8 +929,8 @@ function go(page){
 /* ================= 渲染：首页 ================= */
 function renderHome(){
   const soon = INV.filter(i => daysLeft(i.exp) <= 2 && !HANDLED.has(i.name));
-  document.getElementById("kpiTotal").textContent = INV.length;
-  document.getElementById("kpiSoon").textContent = soon.length;
+  skAnimateCount(document.getElementById("kpiTotal"), INV.length);
+  skAnimateCount(document.getElementById("kpiSoon"), soon.length);
   const first = soon[0];
   if (first){
     const d = daysLeft(first.exp);
@@ -856,13 +943,52 @@ function renderHome(){
     document.getElementById("remindDesc").textContent = "继续好好吃饭吧";
   }
   const r0 = RECIPES[0];
-  document.getElementById("todayDish").textContent = r0.name;
-  document.getElementById("todayTime").textContent = `⏱ ${r0.time}`;
+  if (r0){
+    document.getElementById("todayDish").textContent = r0.name;
+    document.getElementById("todayTime").textContent = `⏱ ${r0.time}`;
+  } else {
+    document.getElementById("todayDish").textContent = "暂无推荐";
+    document.getElementById("todayTime").textContent = "登录后按库存生成";
+  }
   document.getElementById("quickGrid").innerHTML = QUICK.map(q => `
     <button class="qcell" data-view="${q.v}">
       <span class="qic ${q.c}">${q.i}${q.ai ? '<span class="ai-badge">AI</span>' : ""}</span>
       <span class="ql">${q.t}${q.sub ? `<small>${q.sub}</small>` : ""}</span>
     </button>`).join("");
+  renderProfile();
+}
+
+function renderProfile(){
+  const me = SRV_MEMBERS.find(m => AUTH.user && m.userId === AUTH.user.id) || SRV_MEMBERS[0];
+  const fam = document.getElementById("famStat");
+  if (fam) fam.textContent = SRV_MEMBERS.length ? `已同步 ${SRV_MEMBERS.length} 位成员` : AUTH.user ? "暂无家庭成员" : "登录后同步";
+  const av = document.getElementById("pfAvatar");
+  const nm = document.getElementById("pfName");
+  const sub = document.getElementById("pfSub");
+  if (!nm || !sub || !av) return;
+  if (me){
+    av.textContent = me.avatar || "👤";
+    nm.innerHTML = `${me.name}<span class="pf-badge">${me.role === "admin" ? "家庭管理员" : "家庭成员"}</span>`;
+    sub.textContent = me.responsibleCategory ? `负责${me.responsibleCategory} · 已同步 ${SRV_MEMBERS.length} 位成员` : `已同步 ${SRV_MEMBERS.length} 位成员`;
+  } else if (AUTH.user){
+    av.textContent = (AUTH.user.name || "用")[0];
+    nm.textContent = AUTH.user.name;
+    sub.textContent = "家庭档案同步中…";
+  } else {
+    av.textContent = "👤";
+    nm.textContent = AUTH.guest ? "游客模式" : "未登录";
+    sub.textContent = AUTH.guest ? "数据仅保存在本机" : "登录后同步家庭数据";
+  }
+}
+
+function skAnimateCount(el, target){
+  if(!el) return;
+  const dur = 700, t0 = performance.now();
+  (function tick(now){
+    const t = Math.min(1,(now - t0)/dur), e = 1 - Math.pow(1-t,3);
+    el.textContent = Math.round(target*e);
+    if(t<1) requestAnimationFrame(tick);
+  })(t0);
 }
 
 /* ================= 渲染：库存 ================= */
@@ -874,7 +1000,12 @@ function renderChips(){
   }).join("");
 }
 function renderInv(){
-  let list = INV.filter(i => activeCat === "全部" || i.cat === activeCat);
+  let list = INV.filter(i =>
+    (activeCat === "全部" || i.cat === activeCat) &&
+    (FILTER_CATS.size === 0 || FILTER_CATS.has(i.cat)) &&
+    (FILTER_STATUS === "" ||
+      (FILTER_STATUS === "临期" ? daysLeft(i.exp) <= 2 :
+       FILTER_STATUS === "已过期" ? daysLeft(i.exp) < 0 : daysLeft(i.exp) > 2)));
   if (query) list = list.filter(i => i.name.includes(query) || i.cat.includes(query));
   if (sortMode === "days") list = [...list].sort((a,b) => daysLeft(a.exp) - daysLeft(b.exp));
   else if (sortMode === "cat") list = [...list].sort((a,b) => a.cat.localeCompare(b.cat));
@@ -915,6 +1046,16 @@ function recipeCard(r, fav){
 }
 function renderRecipe(){
   const t = RECIPES[0];
+  if (!t){
+    document.getElementById("todayCard").innerHTML = `
+      <div class="tc-left">
+        <span class="today-tag">今日推荐</span>
+        <h3>暂无推荐</h3>
+        <div class="tc-desc">登录后根据当前库存自动推荐菜谱</div>
+      </div>`;
+    document.getElementById("moreList").innerHTML = "";
+    return;
+  }
   document.getElementById("todayCard").innerHTML = `
     <div class="tc-left">
       <span class="today-tag">今日推荐</span>
@@ -929,6 +1070,10 @@ function renderRecipe(){
       <button class="heart-btn ${FAVS.has(t.name) ? "on" : ""}" data-stop data-name="${t.name}">${FAVS.has(t.name) ? "♥" : "♡"}</button>
     </div>`;
   const pool = RECIPES.slice(1);
+  if (!pool.length){
+    document.getElementById("moreList").innerHTML = "";
+    return;
+  }
   const show = [pool[moreIdx % pool.length], pool[(moreIdx + 1) % pool.length]];
   document.getElementById("moreList").innerHTML = show.map(r => recipeCard(r, FAVS.has(r.name))).join("");
 }
@@ -945,6 +1090,9 @@ const VIEW_CFG = {
   notif:    { title:"通知中心", right:"全部已读" },
   favorites:{ title:"我的收藏", right:"" },
   quickAdd: { title:"快速录入", right:"保存" },
+  filter:   { title:"筛选", right:"重置" },
+  waste:    { title:"浪费统计", right:"" },
+  archived: { title:"已处理记录", right:"" },
   item:     { title:"食材详情", right:"" },
   recipe:   { title:"菜谱详情", right:"" }
 };
@@ -957,11 +1105,12 @@ function openView(name, payload){
     ? `<button class="sv-right-btn" data-act="right:${name}">${right}</button>` : "";
   document.getElementById("svBody").innerHTML = renderView(name, payload);
   document.getElementById("subview").classList.add("open");
-  document.body.style.overflow = "hidden";
+  const m = document.querySelector("main"); if (m) m.style.overflow = "hidden";
+  if (name === "nutrition") loadNutrition();
 }
 function closeView(){
   document.getElementById("subview").classList.remove("open");
-  document.body.style.overflow = "";
+  const m = document.querySelector("main"); if (m) m.style.overflow = "";
   currentView = null;
 }
 function refreshView(){
@@ -979,33 +1128,87 @@ function renderView(name, p){
   if (name === "notif") return viewNotif();
   if (name === "favorites") return viewFavorites();
   if (name === "quickAdd") return viewQuickAdd();
+  if (name === "filter") return viewFilter();
+  if (name === "waste") return viewWaste();
+  if (name === "archived") return viewArchived();
   if (name === "item") return viewItem(p.name);
   if (name === "recipe") return viewRecipe(p.idx, p.banner);
   return "";
 }
 
 function viewShop(){
-  const undone = SHOP.filter(s => !s.done).length;
+  const list = SRV_SHOP || SHOP;
+  const undone = list.filter(s => !s.done).length;
   return `
+  <div class="shop-add-row">
+    <input id="shopAddInput" placeholder="添加食材，如 牛奶…">
+    <button class="btn-primary" data-act="shop-add-input">＋ 添加</button>
+  </div>
   <div class="sv-card">
     <div class="sv-sec">待采购 <small>${undone} 项</small></div>
-    ${SHOP.map((s,i) => `
+    ${list.map((s,i) => `
       <div class="shop-item">
-        <button class="shop-check ${s.done ? "on" : ""}" data-act="shop-toggle" data-i="${i}">${s.done ? "✓" : ""}</button>
+        <button class="shop-check ${s.done ? "on" : ""}" data-act="shop-toggle" data-i="${i}" data-id="${s.id || ""}">${s.done ? "✓" : ""}</button>
         <span class="shop-name ${s.done ? "done" : ""}">${s.name}</span>
         <div class="shop-qty">
-          <button class="qty-btn" data-act="shop-qty" data-i="${i}" data-d="-1">−</button>
-          ${s.qty} ${s.unit}
-          <button class="qty-btn" data-act="shop-qty" data-i="${i}" data-d="1">＋</button>
+          <button class="qty-btn" data-act="shop-qty" data-i="${i}" data-id="${s.id || ""}" data-d="-1">−</button>
+          ${s.qty} ${s.unit || ""}
+          <button class="qty-btn" data-act="shop-qty" data-i="${i}" data-id="${s.id || ""}" data-d="1">＋</button>
         </div>
+        <button class="shop-del" data-act="shop-del" data-i="${i}" data-id="${s.id || ""}">✕</button>
       </div>`).join("")}
   </div>
   <div class="sv-card">
     <div class="sv-sec">一键加购 <small>根据菜谱缺料自动建议</small></div>
-    <div class="shop-add">${SHOP_SUGGEST.filter(n => !SHOP.some(s => s.name === n)).map(n =>
+    <div class="shop-add">${SHOP_SUGGEST.filter(n => !(SRV_SHOP||SHOP).some(s => s.name === n)).map(n =>
       `<button class="sug-chip" data-act="shop-add" data-name="${n}">＋ ${n}</button>`).join("")}</div>
     <div class="pref-caption">扫描或菜谱缺料会自动补充到这里</div>
   </div>`;
+}
+
+function viewFilter(){
+  const cats = [...new Set(INV.map(i => i.cat))];
+  return `
+  <div class="sv-card">
+    <div class="sv-sec">品类</div>
+    <div class="chips" style="margin:0 0 6px">${cats.map(c =>
+      `<div class="chip ${FILTER_CATS.has(c) ? "active" : ""}" data-act="filter-cat" data-name="${c}">${c}</div>`).join("")}</div>
+    <div class="sv-sec">状态</div>
+    <div class="chips">${["正常","临期","已过期"].map(s =>
+      `<div class="chip ${FILTER_STATUS === s ? "active" : ""}" data-act="filter-status" data-name="${s}">${s}</div>`).join("")}</div>
+    <div class="pref-caption">已选：品类 ${FILTER_CATS.size} 项 · 状态 ${FILTER_STATUS || "全部"}</div>
+  </div>
+  <div class="detail-actions">
+    <button class="btn-outline" data-act="filter-reset">重置</button>
+    <button class="btn-primary" data-act="filter-apply">确定</button>
+  </div>`;
+}
+
+function viewWaste(){
+  const s = WASTE.summary;
+  return `
+  <div class="sv-card">
+    <div class="sv-sec">累计记录</div>
+    <div class="ing-row"><span>已消耗</span><span class="have">${s.consumed} 件</span></div>
+    <div class="ing-row"><span>浪费</span><span class="missing">${s.wasted} 件</span></div>
+    <div class="ing-row"><span>过期清理</span><span class="missing">${s.expired} 件</span></div>
+    <div class="ing-row"><span>合计</span><span>${s.total} 件</span></div>
+  </div>
+  <div class="sv-card">
+    <div class="sv-sec">最近记录</div>
+    ${WASTE.logs.length ? WASTE.logs.slice(0, 20).map(l =>
+      `<div class="ing-row"><span>${l.name}</span><span class="${l.reason === "consumed" ? "have" : "missing"}">${l.reason === "consumed" ? "消耗" : l.reason === "wasted" ? "浪费" : "过期"} ×${l.quantity}</span></div>`).join("")
+      : `<div class="pref-caption">暂无记录，吃掉/扔掉/过期时会在食材详情里记录</div>`}
+  </div>`;
+}
+
+function viewArchived(){
+  if (!ARCHIVED.length) return `<div class="empty-box">还没有已处理的食材<br><span style="font-size:11px">在食材详情里点「吃掉了 / 扔掉了 / 已过期清理」会归档到这里，误触可复原</span></div>`;
+  return ARCHIVED.map((a,i) => `
+    <div class="sv-card">
+      <div class="ing-row"><span>${a.item.emoji || "🥫"} ${a.item.name}</span><span class="${a.reason === "consumed" ? "have" : "missing"}">${a.reason === "consumed" ? "已消耗" : a.reason === "wasted" ? "已浪费" : "已过期清理"}</span></div>
+      <div class="ing-row"><span style="font-size:12px;color:var(--ink-2)">${a.at}</span><button class="arch-btn" data-act="arch-restore" data-i="${i}">↩ 复原</button></div>
+    </div>`).join("");
 }
 
 function viewRemind(){
@@ -1028,15 +1231,21 @@ function viewRemind(){
 }
 
 function viewMembers(){
+  const list = SRV_MEMBERS;
+  if (!list.length){
+    return `<div class="sv-card"><div class="sv-sec">家庭成员</div>
+      <div class="empty-box">还没有家庭成员<br><span style="font-size:11px">注册/登录后自动创建你的档案</span></div></div>`;
+  }
+  const bg = ["linear-gradient(135deg,#f6c8a8,#e8a37f)","linear-gradient(135deg,#bcd4f0,#8fb0d8)","linear-gradient(135deg,#e4d9c6,#cbb9a0)","linear-gradient(135deg,#f6c9d4,#eba9bb)"];
   return `
   <div class="sv-card">
-    <div class="sv-sec">家庭共 4 位成员 <small>已全部同步</small></div>
-    ${MEMBERS.map(m => `
+    <div class="sv-sec">家庭共 ${list.length} 位成员 <small>已全部同步</small></div>
+    ${list.map((m, i) => `
       <div class="member-card">
-        <div class="member-av" style="background:${m.bg}">${m.av}</div>
+        <div class="member-av" style="background:${bg[i % bg.length]}">${m.avatar || "👤"}</div>
         <div>
-          <div class="member-name">${m.name}<span class="member-role">${m.role}</span></div>
-          <div class="member-meta">${m.meta}</div>
+          <div class="member-name">${m.name}<span class="member-role">${m.role === "admin" ? "管理员" : "成员"}</span></div>
+          <div class="member-meta">本月录入 ${m.monthlyScans || 0} 次${m.responsibleCategory ? ` · 负责${m.responsibleCategory}` : ""}</div>
         </div>
       </div>`).join("")}
   </div>
@@ -1044,46 +1253,79 @@ function viewMembers(){
 }
 
 function viewNutrition(){
-  const max = Math.max(...NUTR.map(n => n[1]));
-  return `
+  const s = NUTR_SRV;
+  if (s){
+    const rows = [
+      ["蛋白质", s.totals.protein, "g"],
+      ["维生素C", s.totals.vitaminC, "mg"],
+      ["膳食纤维", s.totals.fiber, "g"],
+      ["钙", s.totals.calcium, "mg"],
+    ];
+    const refs = [60, 100, 25, 800];
+    return `
   <div class="sv-card">
-    <div class="sv-sec">今日营养概览 <small>基于 12 种库存食材估算</small></div>
-    ${NUTR.map(([k,v]) => `
+    <div class="sv-sec">今日营养概览 <small>基于今天消耗 / 取出 / 过期的 ${s.items.length} 种食材</small></div>
+    ${rows.map(([k, v, u], i) => `
       <div class="nutr-bar-row"><span class="nutr-k">${k}</span>
-        <div class="nutr-track"><i style="width:${v}%"></i></div>
-        <span class="nutr-v">${v}%</span>
+        <div class="nutr-track"><i style="width:${Math.min(100, (v / refs[i]) * 100)}%"></i></div>
+        <span class="nutr-v">${v}${u}</span>
       </div>`).join("")}
   </div>
+  ${s.analysis ? `
   <div class="sv-card">
-    <div class="sv-sec">饮食建议</div>
-    <div class="remind-item"><div class="remind-ic">🍳</div><div class="remind-body"><div class="remind-name">早餐补钙</div><div class="remind-meta">牛奶、酸奶库存充足，建议早餐搭配</div></div></div>
-    <div class="remind-item"><div class="remind-ic">🥦</div><div class="remind-body"><div class="remind-name">午餐补膳食纤维</div><div class="remind-meta">西兰花、生菜建议今天食用</div></div></div>
+    <div class="sv-sec">AI 营养分析</div>
+    <div class="pref-caption" style="color:var(--ink);line-height:1.6">${s.analysis.summary}</div>
+    ${(s.analysis.suggestions || []).map(x => `<div class="remind-item"><div class="remind-ic">💡</div><div class="remind-body"><div class="remind-meta">${x}</div></div></div>`).join("")}
+  </div>` : `
+  <div class="sv-card">
+    <div class="sv-sec">暂无消耗记录</div>
+    <div class="pref-caption">在食材详情里点「吃掉了 / 扔掉了 / 已过期清理」后，这里会自动生成营养分析与 AI 建议</div>
+  </div>`}`;
+  }
+  return `
+  <div class="sv-card">
+    <div class="sv-sec">今日营养概览</div>
+    <div class="empty-box">暂无消耗记录<br><span style="font-size:11px">在食材详情里点「吃掉了 / 扔掉了 / 已过期清理」后生成</span></div>
   </div>`;
 }
 
+async function loadNutrition(){
+  try {
+    const res = await fetch(`${API_BASE}/api/nutrition`, { signal: AbortSignal.timeout(8000) });
+    const j = await res.json();
+    if (j && j.code === 0){ NUTR_SRV = j; }
+  } catch (e) { NUTR_SRV = null; }
+  if (currentView && currentView.name === "nutrition") refreshView();
+}
+
 function viewLog(){
-  const color = { in:"#4d9a62", out:"#5b8fc9", sys:"#e8913c", exp:"#e23c2b" };
-  return `<div class="sv-card">${LOG.map(l => `
-    <div class="log-row"><span class="log-dot" style="background:${color[l.cls]}"></span>
-      <div><div class="log-act">${l.act} · ${l.d}</div><div class="log-t">${l.t}</div></div>
+  if (!SRV_LOGS.length){
+    return `<div class="sv-card"><div class="sv-sec">最近记录</div>
+      <div class="empty-box">暂无活动记录<br><span style="font-size:11px">扫描、取出、消耗后这里会自动更新</span></div></div>`;
+  }
+  const color = { in:"#4d9a62", out:"#5b8fc9", consumed:"#4d9a62", wasted:"#e8913c", expired:"#e23c2b" };
+  const actLabel = { in:"补给", out:"取出", consumed:"消耗", wasted:"浪费", expired:"过期" };
+  return `<div class="sv-card">${SRV_LOGS.map(l => `
+    <div class="log-row"><span class="log-dot" style="background:${color[l.type === "scan" ? l.action : l.action] || "#e8913c"}"></span>
+      <div><div class="log-act">${actLabel[l.action] || l.action} · ${l.name}${l.member ? `（${l.member}）` : ""}</div><div class="log-t">${xzdWhen(l.createdAt)}</div></div>
     </div>`).join("")}</div>`;
 }
 
 function viewTrace(){
+  const t = SRV_TRACE;
+  if (!t){
+    return `<div class="sv-card"><div class="sv-sec">食材履历 / 追溯</div>
+      <div class="empty-box">暂无履历记录<br><span style="font-size:11px">来源、批次、冷链与检测报告</span></div></div>`;
+  }
   return `
   <div class="sv-card">
-    <div class="sv-sec">${TRACE.name} · 批次信息</div>
-    <div class="trace-row"><b>来源</b><span>${TRACE.source}</span></div>
-    <div class="trace-row"><b>批次号</b><span>${TRACE.batch}</span></div>
-    <div class="trace-row"><b>入库时间</b><span>${TRACE.inTime}</span></div>
-    <div class="trace-row"><b>冷链记录</b><span>${TRACE.cold}</span></div>
+    <div class="sv-sec">批次信息</div>
+    <div class="trace-row"><b>来源</b><span>${t.source || "—"}</span></div>
+    <div class="trace-row"><b>批次号</b><span>${t.batch || "—"}</span></div>
+    <div class="trace-row"><b>入库时间</b><span>${t.inTime ? xzdWhen(t.inTime) : "—"}</span></div>
+    <div class="trace-row"><b>冷链记录</b><span>${t.coldChain || "—"}</span></div>
   </div>
-  <div class="sv-card">
-    <div class="sv-sec">流转时间线</div>
-    ${["云南基地采收","分拣预冷 2°C","冷链运输 8 小时","家庭冰箱入库"].map((s,i) => `
-      <div class="step-row"><span class="step-num">${i+1}</span><span>${s}</span></div>`).join("")}
-  </div>
-  <div class="sv-card"><div class="trace-ok">✓ 农残检测报告 · 合格</div></div>`;
+  ${t.report ? `<div class="sv-card"><div class="trace-ok">✓ ${t.report}</div></div>` : ""}`;
 }
 
 function viewPrefs(){
@@ -1098,28 +1340,33 @@ function viewPrefs(){
 }
 
 function viewNotif(){
-  return `<div class="sv-card">${NOTIFS.map((n,i) => `
+  if (!SRV_NOTIFS.length){
+    return `<div class="sv-card"><div class="sv-sec">通知中心</div>
+      <div class="empty-box">暂无通知</div></div>`;
+  }
+  return `<div class="sv-card">${SRV_NOTIFS.map((n,i) => `
     <button class="notif-item ${n.unread ? "unread" : ""}" data-view="${n.view}">
-      <span class="notif-ic" style="background:${n.bg}">${n.ic}</span>
-      <span><span class="notif-t">${n.t}</span><div class="notif-d">${n.d}</div></span>
+      <span class="notif-ic" style="background:#fde3dc">${n.type === "shop" ? "🛒" : n.type === "expiry" ? "🔔" : n.type === "recipe" ? "🍳" : "💬"}</span>
+      <span><span class="notif-t">${n.title}</span><div class="notif-d">${n.desc || ""}</div></span>
     </button>`).join("")}</div>`;
 }
 
 function viewFavorites(){
   const favs = RECIPES.filter(r => FAVS.has(r.name));
   return favs.length ? favs.map(r => recipeCard(r, true)).join("") :
-    `<div class="empty-box">还没有收藏的菜谱<br><span style="font-size:11px">去「智能菜谱」里点 ♡ 收藏吧</span></div>`;
+    `<div class="empty-box">还没有收藏的菜谱<br><span style="font-size:11px">去「妙用」里点 ♡ 收藏吧</span></div>`;
 }
 
 function viewQuickAdd(){
   const cats = [...new Set(INV.map(i => i.cat))];
+  const members = SRV_MEMBERS.length ? SRV_MEMBERS : [{ name: AUTH.user ? AUTH.user.name : "我", avatar: "👤" }];
   return `
   <div class="sv-card">
     <div class="form-field"><label class="form-label">食材名称</label><input class="form-input" id="qaName" placeholder="如：苹果"></div>
     <div class="form-field"><label class="form-label">分类</label><select class="form-input" id="qaCat">${cats.map(c => `<option>${c}</option>`).join("")}</select></div>
     <div class="form-field"><label class="form-label">建议保鲜天数</label><select class="form-input" id="qaDays"><option>3</option><option>5</option><option>7</option><option>15</option><option>30</option></select></div>
-    <div class="form-field"><label class="form-label">录入人</label><select class="form-input" id="qaBy"><option>妈妈</option><option>爸爸</option><option>爷爷</option><option>姐姐</option></select></div>
-    <div class="pref-caption">保存后会自动同步给 4 位家庭成员</div>
+    <div class="form-field"><label class="form-label">录入人</label><select class="form-input" id="qaBy">${members.map(m => `<option>${m.name}</option>`).join("")}</select></div>
+    <div class="pref-caption">保存后会自动同步给 ${members.length} 位家庭成员</div>
   </div>`;
 }
 
@@ -1140,9 +1387,12 @@ function viewItem(name){
     <div class="ing-row"><span>存放位置</span><span>${it.storage}</span></div>
     <div class="ing-row"><span>建议</span><span>${d <= 1 ? "尽快食用或放入菜谱" : "冷藏保鲜，注意密封"}</span></div>
   </div>
-  <div class="detail-actions">
-    <button class="btn-outline" data-act="item-use" data-name="${it.name}">已用完</button>
-    <button class="btn-primary" data-act="item-note">记一笔</button>
+  <div class="sv-sec">过期处理</div>
+  <div class="expire-grid">
+    <button class="btn-outline" data-act="item-eat" data-name="${it.name}">🥢 吃掉了</button>
+    <button class="btn-outline" data-act="item-waste" data-name="${it.name}">🗑️ 扔掉了</button>
+    <button class="btn-outline" data-act="item-expired" data-name="${it.name}">⏰ 已过期清理</button>
+    <button class="btn-primary" data-act="item-restock" data-name="${it.name}">🛒 加入购物清单</button>
   </div>`;
 }
 
@@ -1175,20 +1425,32 @@ function viewRecipe(idx, banner){
 function act(action, el){
   const [a, ...rest] = action.split(":");
   if (a === "shop-toggle"){
-    const i = +el.dataset.i; SHOP[i].done = !SHOP[i].done; refreshView();
+    const list = SRV_SHOP || SHOP, i = +el.dataset.i;
+    if (SRV_SHOP && el.dataset.id){ fetch(`${API_BASE}/api/shopping-list/${el.dataset.id}`, { method:"PATCH", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ done: !list[i].done }) }).catch(()=>{}); }
+    list[i].done = !list[i].done; refreshView();
   } else if (a === "shop-qty"){
-    const i = +el.dataset.i, d = +el.dataset.d;
-    SHOP[i].qty = Math.max(1, SHOP[i].qty + d); refreshView();
+    const list = SRV_SHOP || SHOP, i = +el.dataset.i, d = +el.dataset.d;
+    list[i].qty = Math.max(1, list[i].qty + d);
+    if (SRV_SHOP && el.dataset.id){ fetch(`${API_BASE}/api/shopping-list/${el.dataset.id}`, { method:"PATCH", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ qty: list[i].qty }) }).catch(()=>{}); }
+    refreshView();
   } else if (a === "shop-add"){
-    if (!SHOP.some(s => s.name === el.dataset.name)) { SHOP.push({ name:el.dataset.name, qty:1, unit:"份", done:false }); }
+    const list = SRV_SHOP || SHOP;
+    if (!list.some(s => s.name === el.dataset.name)) {
+      list.push({ name:el.dataset.name, qty:1, unit:"份", done:false });
+      fetch(`${API_BASE}/api/shopping-list`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ name:el.dataset.name, qty:1, unit:"份", source:"recipe" }) }).catch(()=>{});
+    }
     toast(`${el.dataset.name} 已加入购物清单`); refreshView();
   } else if (a === "right"){
     const v = rest[0];
-    if (v === "shop"){ SHOP.forEach(s => s.done = true); toast("已完成项已清空"); refreshView(); }
-    else if (v === "prefs"){ toast("偏好已保存 · 推荐将更精准"); closeView(); }
-    else if (v === "notif"){ NOTIFS.forEach(n => n.unread = false); document.getElementById("bellDot").classList.add("hidden"); toast("通知已全部标记为已读"); refreshView(); }
+    if (v === "shop"){ const list = SRV_SHOP || SHOP; list.forEach(s => s.done = true); if (SRV_SHOP) list.forEach(s => { if (s.id) fetch(`${API_BASE}/api/shopping-list/${s.id}`, { method:"PATCH", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ done: true }) }).catch(()=>{}); }); toast("已完成项已清空"); refreshView(); }
+    else if (v === "prefs"){ savePrefs(); closeView(); }
+    else if (v === "notif"){
+      SRV_NOTIFS.forEach(n => { if (n.unread && n.id){ n.unread = false; fetch(`${API_BASE}/api/notifications/${n.id}`, { method:"PATCH", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ unread:false }) }).catch(()=>{}); } });
+      updateBellDot(); toast("通知已全部标记为已读"); refreshView();
+    }
     else if (v === "quickAdd"){ quickSave(); }
     else if (v === "members"){ toast("邀请链接已生成 · 有效期 24 小时"); }
+    else if (v === "filter"){ FILTER_CATS.clear(); FILTER_STATUS = ""; refreshView(); }
   } else if (a === "remind-cook"){
     const idx = RECIPE_FOR[el.dataset.name] ?? 0;
     openView("recipe", { idx, banner:`为「${el.dataset.name}」推荐` });
@@ -1199,34 +1461,78 @@ function act(action, el){
   } else if (a === "pref-toggle"){
     const n = el.dataset.name;
     PREF_SEL.has(n) ? PREF_SEL.delete(n) : PREF_SEL.add(n); refreshView();
+    savePrefs();
   } else if (a === "ing-buy"){
-    if (!SHOP.some(s => s.name === el.dataset.name)) SHOP.push({ name:el.dataset.name, qty:1, unit:"份", done:false });
+    const list = SRV_SHOP || [];
+    if (!list.some(s => s.name === el.dataset.name)){
+      list.push({ name:el.dataset.name, qty:1, unit:"份", done:false });
+      fetch(`${API_BASE}/api/shopping-list`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ name: el.dataset.name, qty:1, unit:"份", source:"recipe" }) }).catch(()=>{});
+    }
     toast(`「${el.dataset.name}」已加入购物清单`);
   } else if (a === "detail-fav"){
     const n = el.dataset.name;
     FAVS.has(n) ? FAVS.delete(n) : FAVS.add(n);
+    const r = RECIPES.find(x => x.name === n);
+    if (r && r.id){ fetch(`${API_BASE}/api/recipes/${r.id}`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ action:"favorite", liked: FAVS.has(n) }) }).catch(()=>{}); }
     el.innerHTML = FAVS.has(n) ? "♥ 已收藏" : "♡ 收藏";
     el.classList.toggle("on", FAVS.has(n));
     toast(FAVS.has(n) ? "已加入收藏" : "已取消收藏");
   } else if (a === "detail-cook"){
     toast(`开做「${el.dataset.name}」· 完成后记得在库存扣减`);
-  } else if (a === "item-use"){
+  } else if (a === "filter-cat"){
+    const n = el.dataset.name; FILTER_CATS.has(n) ? FILTER_CATS.delete(n) : FILTER_CATS.add(n); refreshView();
+  } else if (a === "filter-status"){
+    FILTER_STATUS = FILTER_STATUS === el.dataset.name ? "" : el.dataset.name; refreshView();
+  } else if (a === "filter-reset"){
+    FILTER_CATS.clear(); FILTER_STATUS = ""; refreshView();
+  } else if (a === "filter-apply"){
+    closeView(); renderChips(); renderInv(); toast("筛选已应用");
+  } else if (a === "item-eat" || a === "item-waste" || a === "item-expired"){
+    const reason = a === "item-eat" ? "consumed" : a === "item-waste" ? "wasted" : "expired";
+    const it = INV.find(x => x.name === el.dataset.name);
+    if (!it) return;
+    if (it._db){
+      fetch(`${API_BASE}/api/consume`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ name: it.name, reason, quantity: 1 }) }).catch(()=>{});
+    }
+    const i = INV.indexOf(it);
+    if (i >= 0){ INV.splice(i, 1); ARCHIVED.unshift({ item: it, reason, at: new Date().toLocaleString("zh-CN", { hour12:false }) }); }
+    const an = document.getElementById("archN"); if (an) an.textContent = ARCHIVED.length;
+    toast(reason === "consumed" ? `「${it.name}」已记录消耗` : reason === "wasted" ? `「${it.name}」已记录浪费` : `「${it.name}」已记录过期清理`);
+    closeView(); renderHome(); renderChips(); renderInv();
+  } else if (a === "item-restock"){
     const it = INV.find(x => x.name === el.dataset.name);
     if (it){
-      if (it._db){
-        fetch(`${API_BASE}/api/consume`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: it.name, reason: "consumed", quantity: 1 })
-        }).catch(() => {});
-      }
-      const i = INV.indexOf(it);
-      if (i >= 0) INV.splice(i, 1);
-      toast(`「${it.name}」已从库存移除`);
-      closeView(); renderHome(); renderChips(); renderInv();
+      fetch(`${API_BASE}/api/shopping-list`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ name: it.name, qty: 1, unit: "份", source: "expiry" }) }).catch(()=>{});
+      toast(`「${it.name}」已加入购物清单`);
     }
-  } else if (a === "item-note"){
-    toast("已记录 · 同步到家庭动态");
+  } else if (a === "arch-restore"){
+    const idx = +el.dataset.i, a = ARCHIVED[idx];
+    if (!a) return;
+    ARCHIVED.splice(idx, 1);
+    INV.unshift(a.item);
+    if (a.item._db && a.item.exp){
+      const days = Math.max(1, Math.round((new Date(a.item.exp) - new Date()) / 86400000));
+      fetch(`${API_BASE}/api/items`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ name:a.item.name, category:a.item.cat, container:a.item.c || "冰箱", expiryDays: days, keepDays: days }) }).catch(()=>{});
+    }
+    const an = document.getElementById("archN"); if (an) an.textContent = ARCHIVED.length;
+    toast(`「${a.item.name}」已复原`);
+    refreshView(); renderHome(); renderChips(); renderInv();
+  } else if (a === "shop-add-input"){
+    const inp = document.getElementById("shopAddInput");
+    const name = (inp ? inp.value.trim() : "");
+    if (!name){ toast("请输入食材名称"); return; }
+    const list = SRV_SHOP || SHOP;
+    if (!list.some(s => s.name === name)){
+      list.push({ name, qty:1, unit:"份", done:false });
+      fetch(`${API_BASE}/api/shopping-list`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ name, qty:1, unit:"份", source:"manual" }) }).catch(()=>{});
+    }
+    if (inp) inp.value = "";
+    toast(`「${name}」已加入购物清单`); refreshView();
+  } else if (a === "shop-del"){
+    const list = SRV_SHOP || SHOP, i = +el.dataset.i;
+    const it = list[i]; if (!it) return;
+    if (SRV_SHOP && it.id){ fetch(`${API_BASE}/api/shopping-list/${it.id}`, { method:"DELETE" }).catch(()=>{}); }
+    list.splice(i, 1); refreshView();
   }
 }
 
@@ -1243,6 +1549,7 @@ function quickSave(){
     when:`今天 ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`,
     exp: exp.toISOString().slice(0,10), storage:"保鲜中"
   });
+  fetch(`${API_BASE}/api/items`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ name, category: cat, container: "冰箱", expiryDays: days, keepDays: days }) }).catch(()=>{});
   toast(`「${name}」已录入并同步给家庭成员`);
   closeView(); renderHome(); renderChips(); renderInv(); renderRecipe();
 }
@@ -1292,7 +1599,139 @@ async function syncInventory(){
     const now = new Date();
     const upd = document.querySelector(".fridge-head .upd");
     if (upd) upd.textContent = `已同步 ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-  } catch (e) { /* 离线/失败时保留本地演示数据 */ }
+  } catch (e) {
+    const upd = document.getElementById("updAt");
+    if (upd) upd.textContent = "同步失败";
+  }
+}
+
+async function loadShoppingHub(){
+  try {
+    const res = await fetch(`${API_BASE}/api/shopping-list`, { signal: AbortSignal.timeout(6000) });
+    if (res.status === 401){ SRV_SHOP = []; return; }
+    const j = await res.json();
+    if (j && j.code === 0 && Array.isArray(j.items)){
+      SRV_SHOP = j.items.map(s => ({ id: s.id, name: s.name, qty: s.qty, unit: s.unit || "", done: s.done }));
+    }
+  } catch (e) { SRV_SHOP = SRV_SHOP || []; }
+  const n = document.getElementById("hubShopN");
+  const list = SRV_SHOP || [];
+  if (n) n.textContent = list.filter(s => !s.done).length ? `${list.filter(s => !s.done).length} 项待购` : "—";
+}
+
+async function loadWaste(){
+  try {
+    const res = await fetch(`${API_BASE}/api/consume`, { signal: AbortSignal.timeout(6000) });
+    if (res.status === 401){ WASTE = { logs: [], summary: { consumed: 0, wasted: 0, expired: 0, total: 0 } }; return; }
+    const j = await res.json();
+    if (j && j.code === 0){ WASTE = { logs: j.logs || [], summary: j.summary || WASTE.summary }; }
+  } catch (e) { /* 保持空态 */ }
+  const n = document.getElementById("hubWasteN");
+  if (n) n.textContent = WASTE.summary.total ? `${WASTE.summary.total} 件` : "—";
+}
+
+async function syncRecipes(){
+  try {
+    const res = await fetch(`${API_BASE}/api/recipes`, { signal: AbortSignal.timeout(6000) });
+    if (res.status === 401){ RECIPES.length = 0; renderHome(); renderRecipe(); return; }
+    const j = await res.json();
+    if (j && j.code === 0 && Array.isArray(j.recipes) && j.recipes.length){
+      RECIPES.length = 0;
+      FAVS.clear();
+      j.recipes.forEach(r => {
+        RECIPES.push({
+          id: r.id, name: r.name, time: `${r.timeMin || 15} 分钟`, tag: r.tag || "家常",
+          tcls: r.tag === "清淡" ? "tag-green" : r.tag === "微辣" ? "tag-red" : "tag-orange",
+          desc: r.desc || "", nutr: r.nutr || "", emoji: r.emoji || "🍽️", grad: r.grad || "",
+          ing: (r.ingredients || []).map(x => [x.name, x.qty, x.status === "有" ? "有" : "缺"]),
+          steps: r.steps || [], liked: !!r.liked, timesCooked: r.timesCooked || 0
+        });
+        if (r.liked) FAVS.add(r.name);
+      });
+      SRV_RECIPES = true;
+      renderHome(); renderRecipe();
+    }
+  } catch (e) { /* 保持空态 */ }
+}
+
+async function loadMembers(){
+  try {
+    const res = await fetch(`${API_BASE}/api/members`, { signal: AbortSignal.timeout(6000) });
+    if (res.status === 401){ SRV_MEMBERS = []; renderProfile(); return; }
+    const j = await res.json();
+    SRV_MEMBERS = (j && j.code === 0 && Array.isArray(j.members)) ? j.members : [];
+    renderProfile();
+    const view = document.getElementById("svBody");
+    if (view && currentView && currentView.name === "members") refreshView();
+  } catch (e) { /* 保持空态 */ }
+}
+
+async function loadNotifications(){
+  try {
+    const res = await fetch(`${API_BASE}/api/notifications`, { signal: AbortSignal.timeout(6000) });
+    if (res.status === 401){ SRV_NOTIFS = []; updateBellDot(); return; }
+    const j = await res.json();
+    SRV_NOTIFS = (j && j.code === 0 && Array.isArray(j.notifications)) ? j.notifications : [];
+    updateBellDot();
+    const view = document.getElementById("svBody");
+    if (view && currentView && currentView.name === "notif") refreshView();
+  } catch (e) { /* 保持空态 */ }
+}
+
+function updateBellDot(){
+  const unread = SRV_NOTIFS.filter(n => n.unread).length;
+  const dot = document.getElementById("bellDot");
+  if (dot) dot.classList.toggle("hidden", unread === 0);
+}
+
+async function loadLogs(){
+  try {
+    const res = await fetch(`${API_BASE}/api/logs`, { signal: AbortSignal.timeout(6000) });
+    if (res.status === 401){ SRV_LOGS = []; return; }
+    const j = await res.json();
+    SRV_LOGS = (j && j.code === 0 && Array.isArray(j.logs)) ? j.logs : [];
+    const view = document.getElementById("svBody");
+    if (view && currentView && currentView.name === "log") refreshView();
+  } catch (e) { /* 保持空态 */ }
+}
+
+async function loadTrace(){
+  try {
+    const it = INV[0];
+    const url = `${API_BASE}/api/trace${it && it.name ? `?name=${encodeURIComponent(it.name)}` : ""}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (res.status === 401){ SRV_TRACE = null; return; }
+    const j = await res.json();
+    SRV_TRACE = (j && j.code === 0 && j.trace) ? j.trace : null;
+    const view = document.getElementById("svBody");
+    if (view && currentView && currentView.name === "trace") refreshView();
+  } catch (e) { SRV_TRACE = null; }
+}
+
+async function loadPrefs(){
+  try {
+    const res = await fetch(`${API_BASE}/api/members/prefs`, { signal: AbortSignal.timeout(6000) });
+    if (res.status === 401){ SRV_PREFS = []; PREF_SEL.clear(); return; }
+    const j = await res.json();
+    SRV_PREFS = Array.isArray(j.preferences) ? j.preferences : [];
+    PREF_SEL.clear();
+    SRV_PREFS.forEach(p => PREF_SEL.add(p));
+    const view = document.getElementById("svBody");
+    if (view && currentView && currentView.name === "prefs") refreshView();
+  } catch (e) { /* 保持空态 */ }
+}
+
+async function savePrefs(){
+  if (!AUTH.user){ toast("登录后才能保存偏好"); return; }
+  try {
+    await fetch(`${API_BASE}/api/members/prefs`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ preferences: [...PREF_SEL] }),
+      signal: AbortSignal.timeout(6000),
+    });
+  } catch (e) { /* 静默 */ }
 }
 
 /* ================= 全局跳转 ================= */
@@ -1344,6 +1783,7 @@ document.getElementById("invSearchInput").addEventListener("input", e => {
 document.getElementById("invSearchClear").addEventListener("click", () => {
   document.getElementById("invSearchInput").value = ""; query = ""; renderInv();
 });
+document.getElementById("invFilterBtn").addEventListener("click", () => openView("filter"));
 document.getElementById("sortBtn").addEventListener("click", cycleSort);
 document.getElementById("sortBtn2").addEventListener("click", cycleSort);
 function cycleSort(){
@@ -1358,17 +1798,12 @@ document.getElementById("invChips").addEventListener("click", e => {
 
 /* ================= 菜谱页交互 ================= */
 document.getElementById("shuffleBtn").addEventListener("click", () => { moreIdx++; renderRecipe(); toast("为你换了一批新菜谱"); });
-document.getElementById("prefRow").addEventListener("click", e => {
-  const p = e.target.closest(".pref"); if (!p) return;
-  document.querySelectorAll("#prefRow .pref").forEach(x => x.classList.remove("active"));
-  p.classList.add("active"); toast("偏好已更新，菜谱将更懂你");
-});
 document.getElementById("helpItem").addEventListener("click", () => toast("意见已收到，感谢反馈 ❤️"));
 document.getElementById("aboutItem").addEventListener("click", () => toast("食刻 v1.1.0 · 让每一餐都新鲜安心"));
 document.getElementById("bellBtn").addEventListener("click", () => openView("notif"));
 
 /* ================= 扫描：摄像头 + 识别 ================= */
-const SCAN_URL = "https://tuvmkt.com/api/scan";
+const SCAN_URL = "https://shike.live/api/scan";
 const API_BASE = SCAN_URL.replace(/\/api\/scan$/, "");
 const DEVICE_ID = "h5-demo-001";
 let stream = null, camMode = "demo", camLive = false;
@@ -1570,6 +2005,166 @@ document.getElementById("torchBtn").addEventListener("click", async () => {
   document.getElementById("torchBtn").innerHTML = torchOn ? "💡 关灯" : "⚡ 开灯";
 });
 
+/* ================= 登录 / 注册（后端 auth 接口） ================= */
+const authScreen = document.getElementById("authScreen");
+const loginForm = document.getElementById("loginForm");
+const regForm = document.getElementById("regForm");
+let AUTH = { user: null, guest: false };
+
+function authMsg(which, text){
+  const el = document.getElementById(which === "login" ? "loginErr" : "regErr");
+  el.textContent = text;
+  el.classList.toggle("show", !!text);
+}
+function switchAuthTab(view){
+  const loginOn = view === "login";
+  document.getElementById("authTabLogin").classList.toggle("on", loginOn);
+  document.getElementById("authTabRegister").classList.toggle("on", !loginOn);
+  loginForm.style.display = loginOn ? "" : "none";
+  regForm.style.display = loginOn ? "none" : "";
+  authMsg("login", ""); authMsg("reg", "");
+}
+document.getElementById("authTabLogin").addEventListener("click", () => switchAuthTab("login"));
+document.getElementById("authTabRegister").addEventListener("click", () => switchAuthTab("register"));
+
+function renderAccountCard(){
+  const av = document.getElementById("acAvatar");
+  const name = document.getElementById("acName");
+  const mail = document.getElementById("acMail");
+  const btn = document.getElementById("acBtn");
+  if (AUTH.user){
+    av.textContent = (AUTH.user.name || "用")[0];
+    name.textContent = AUTH.user.name || "用户";
+    mail.textContent = AUTH.user.email || "";
+    btn.textContent = "退出登录";
+    btn.classList.add("ghost");
+  } else {
+    av.textContent = "👤";
+    name.textContent = AUTH.guest ? "游客模式" : "未登录";
+    mail.textContent = AUTH.guest ? "数据仅保存在本机" : "登录后同步家庭数据";
+    btn.textContent = AUTH.guest ? "去登录" : "登录 / 注册";
+    btn.classList.remove("ghost");
+  }
+}
+document.getElementById("acBtn").addEventListener("click", () => {
+  if (AUTH.user){ doLogout(); } else { showAuthScreen(); }
+});
+
+function showAuthScreen(){
+  AUTH.guest = false;
+  authScreen.classList.remove("hidden");
+  switchAuthTab("login");
+  renderAccountCard();
+}
+function enterApp(user){
+  AUTH.user = user || null;
+  AUTH.guest = false;
+  authScreen.classList.add("hidden");
+  renderAccountCard();
+  // 登录后拉取全量真实数据
+  syncInventory(); loadShoppingHub(); loadWaste(); syncRecipes();
+  loadMembers(); loadNotifications(); loadLogs(); loadTrace(); loadPrefs(); loadNutrition();
+  toast(user ? `欢迎回来，${user.name}` : "已进入食刻");
+}
+
+function reloadAllData(){
+  syncInventory(); loadShoppingHub(); loadWaste(); syncRecipes();
+  loadMembers(); loadNotifications(); loadLogs(); loadTrace(); loadPrefs(); loadNutrition();
+}
+
+async function checkAuth(){
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/me`, { credentials: "include", signal: AbortSignal.timeout(6000) });
+    if (res.ok){
+      const j = await res.json();
+      if (j && j.user){ enterApp(j.user); return; }
+    }
+  } catch (e) { /* 后端不可达：保留游客入口 */ }
+  authScreen.classList.remove("hidden");
+  switchAuthTab("login");
+  renderAccountCard();
+}
+
+async function doLogin(e){
+  e.preventDefault();
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  if (!email || !password){ authMsg("login", "请输入邮箱和密码"); return; }
+  const btn = document.getElementById("loginBtn");
+  btn.disabled = true; btn.textContent = "登录中…";
+  authMsg("login", "");
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email, password }),
+      signal: AbortSignal.timeout(8000),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok){ authMsg("login", j.error || "登录失败，请重试"); return; }
+    enterApp(j.user);
+  } catch (err) {
+    authMsg("login", "网络错误，请稍后重试");
+  } finally {
+    btn.disabled = false; btn.textContent = "登 录";
+  }
+}
+
+async function doRegister(e){
+  e.preventDefault();
+  const name = document.getElementById("regName").value.trim();
+  const email = document.getElementById("regEmail").value.trim();
+  const password = document.getElementById("regPassword").value;
+  const confirm = document.getElementById("regConfirm").value;
+  if (!name){ authMsg("reg", "请输入姓名"); return; }
+  if (password !== confirm){ authMsg("reg", "两次输入的密码不一致"); return; }
+  const btn = document.getElementById("regBtn");
+  btn.disabled = true; btn.textContent = "注册中…";
+  authMsg("reg", "");
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ name, email, password }),
+      signal: AbortSignal.timeout(8000),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok){ authMsg("reg", j.error || "注册失败，请重试"); return; }
+    enterApp(j.user);
+  } catch (err) {
+    authMsg("reg", "网络错误，请稍后重试");
+  } finally {
+    btn.disabled = false; btn.textContent = "注 册";
+  }
+}
+
+async function doLogout(){
+  try {
+    await fetch(`${API_BASE}/api/auth/logout`, { method: "POST", credentials: "include", signal: AbortSignal.timeout(6000) });
+  } catch (e) { /* 忽略 */ }
+  AUTH.user = null; AUTH.guest = false;
+  INV.length = 0; RECIPES.length = 0; SRV_SHOP = null; SRV_MEMBERS = []; SRV_NOTIFS = [];
+  SRV_LOGS = []; SRV_TRACE = null; SRV_PREFS = []; NUTR_SRV = null;
+  WASTE = { logs: [], summary: { consumed: 0, wasted: 0, expired: 0, total: 0 } };
+  FAVS.clear(); PREF_SEL.clear();
+  renderHome(); renderChips(); renderInv(); renderRecipe(); updateBellDot();
+  toast("已退出登录");
+  showAuthScreen();
+}
+
+loginForm.addEventListener("submit", doLogin);
+regForm.addEventListener("submit", doRegister);
+document.getElementById("guestBtn").addEventListener("click", () => {
+  AUTH.guest = true;
+  authScreen.classList.add("hidden");
+  renderAccountCard();
+  toast("游客模式 · 演示数据");
+});
+
+checkAuth();
+
 /* ================= 时钟 / 启动 ================= */
 function tick(){
   const t = new Date();
@@ -1579,11 +2174,14 @@ function tick(){
 tick(); setInterval(tick, 10000);
 renderHome(); renderChips(); renderInv(); renderRecipe();
 syncInventory();
+loadShoppingHub(); loadWaste(); syncRecipes();
+loadMembers(); loadNotifications(); loadLogs(); loadTrace(); loadPrefs();
+const arch0 = document.getElementById("archN"); if (arch0) arch0.textContent = ARCHIVED.length;
 startCamera();
 const hash = location.hash.slice(1);
 if (["home","scan","inv","recipe","me"].includes(hash)) go(hash);
 
-/* ================= 云端实时库存（tuvmkt.com/api/items） ================= */
+/* ================= 云端实时库存（shike.live/api/items） ================= */
 function xzdPad(n){ return String(n).padStart(2, "0"); }
 function xzdWhen(iso){
   if (!iso) return "—";
@@ -1596,9 +2194,14 @@ function xzdWhen(iso){
 }
 async function loadServerData(){
   try {
-    const res = await fetch("https://tuvmkt.com/api/items", {
+    const res = await fetch("https://shike.live/api/items", {
       signal: AbortSignal.timeout(6000),
     });
+    if (res.status === 401){
+      INV.splice(0, INV.length);
+      renderHome(); renderChips(); renderInv(); renderRecipe();
+      return;
+    }
     if (!res.ok) return;
     const data = await res.json();
     if (!data || data.code !== 0 || !Array.isArray(data.items)) return;
@@ -1618,9 +2221,7 @@ async function loadServerData(){
     }));
     INV.splice(0, INV.length, ...list);
     renderHome(); renderChips(); renderInv(); renderRecipe();
-  } catch (e) {
-    // 服务器不可达时保留本地演示数据
-  }
+  } catch (e) { /* 服务器不可达时保持空态 */ }
 }
 loadServerData();
 setInterval(loadServerData, 5000);   // 硬件出入库 → 云端 → 本页自动刷新

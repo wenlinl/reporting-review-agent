@@ -1,25 +1,26 @@
 {
-  "name": "midyear-workshop",
-  "version": "0.1.0",
+  "name": "shike-server",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test \"tests/*.test.ts\"",
     "db:push": "mkdir -p data && touch data/app.db && prisma db push",
+    "db:migrate": "mkdir -p data && touch data/app.db && prisma migrate dev",
     "db:seed": "mkdir -p data && tsx prisma/seed.ts",
-    "db:accounts": "tsx prisma/seed-accounts.ts",
-    "postinstall": "prisma generate",
-    "db:seed:shike": "mkdir -p data && tsx prisma/seed-shike.ts"
+    "db:seed:shike": "mkdir -p data && tsx prisma/seed-shike.ts",
+    "db:devices": "tsx prisma/seed-device-tokens.ts",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",
     "bcryptjs": "^3.0.2",
     "busboy": "^1.6.0",
     "jose": "^5.9.6",
-    "jszip": "^3.10.1",
     "next": "^15.3.3",
-    "pdfjs-dist": "^4.10.38",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { xzdJson, xzdOptions } from "@/lib/http";
+import { verifyDevice } from "@/lib/deviceAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,19 +16,16 @@ export async function POST(req: NextRequest) {
     msg?: string;
   } | null;
   const deviceId = (body?.deviceId || "xzd-t5e1-001").slice(0, 64);
+  const auth = await verifyDevice(req, deviceId);
+  if (!auth.ok) {
+    return xzdJson({ code: 401, msg: "设备鉴权失败" }, 401);
+  }
 
-  const device = await prisma.device.upsert({
+  const device = await prisma.device.update({
     where: { deviceId },
-    update: {
-      lastSeenAt: new Date(),
+    data: {
       firmwareVersion: body?.firmwareVersion || undefined,
       name: body?.name || undefined,
-    },
-    create: {
-      deviceId,
-      name: body?.name || deviceId,
-      firmwareVersion: body?.firmwareVersion || null,
-      lastSeenAt: new Date(),
     },
   });
 

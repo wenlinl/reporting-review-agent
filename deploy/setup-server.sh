@@ -6,7 +6,7 @@ ADMIN_EMAIL="${2:-}"
 
 if [[ -z "$DOMAIN" ]]; then
   echo "用法: sudo bash setup-server.sh <你的域名> [邮箱]"
-  echo "示例: sudo bash setup-server.sh workshop.example.com admin@example.com"
+  echo "示例: sudo bash setup-server.sh shike.example.com admin@example.com"
   echo "说明: 邮箱用于 Let's Encrypt 证书到期提醒（可省略）"
   exit 1
 fi
@@ -59,7 +59,7 @@ sleep 5
 docker compose exec -T app sh -c "mkdir -p data && touch data/app.db && npx prisma db push && npx tsx prisma/seed.ts"
 
 echo "==> 5/6 配置 Nginx 反向代理"
-cat > /tmp/midyear-workshop-nginx <<EOF
+cat > /tmp/shike-nginx <<EOF
 server {
     listen 80;
     server_name $DOMAIN;
@@ -76,8 +76,8 @@ server {
     }
 }
 EOF
-cp /tmp/midyear-workshop-nginx /etc/nginx/sites-available/midyear-workshop
-ln -sf /etc/nginx/sites-available/midyear-workshop /etc/nginx/sites-enabled/midyear-workshop
+cp /tmp/shike-nginx /etc/nginx/sites-available/shike
+ln -sf /etc/nginx/sites-available/shike /etc/nginx/sites-enabled/shike
 nginx -t
 systemctl reload nginx
 
