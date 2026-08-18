@@ -11,6 +11,44 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
+
+      - name: 检查部署配置
+        env:
+          SSH_HOST: ${{ secrets.SHIKE_SSH_HOST }}
+          SSH_PORT: ${{ secrets.SHIKE_SSH_PORT }}
+          SSH_USER: ${{ secrets.SHIKE_SSH_USER }}
+          SSH_KEY: ${{ secrets.SHIKE_SSH_KEY }}
+          DEPLOY_DIR: ${{ secrets.SHIKE_DEPLOY_DIR }}
+        run: |
+          : "${SSH_HOST:?缺少 SHIKE_SSH_HOST}"
+          : "${SSH_PORT:?缺少 SHIKE_SSH_PORT}"
+          : "${SSH_USER:?缺少 SHIKE_SSH_USER}"
+          : "${SSH_KEY:?缺少 SHIKE_SSH_KEY}"
+          : "${DEPLOY_DIR:?缺少 SHIKE_DEPLOY_DIR}"
+          case "$DEPLOY_DIR" in
+            *workshop*)
+              echo "::error::SHIKE_DEPLOY_DIR 不能包含 workshop，请改为 /opt/shike"
+              exit 1
+              ;;
+          esac
+          echo "目标: $SSH_USER@$SSH_HOST:$SSH_PORT $DEPLOY_DIR"
+
+      - name: 测试 SSH 连接
+        env:
+          SSH_HOST: ${{ secrets.SHIKE_SSH_HOST }}
+          SSH_PORT: ${{ secrets.SHIKE_SSH_PORT }}
+          SSH_USER: ${{ secrets.SHIKE_SSH_USER }}
+          SSH_KEY: ${{ secrets.SHIKE_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=accept-new \
+            -o IdentitiesOnly=yes \
+            -o ConnectTimeout=15 \
+            "$SSH_USER@$SSH_HOST" "echo CONNECT_OK && whoami"
+
       - name: 上传代码到服务器并重建
         env:
           SSH_HOST: ${{ secrets.SHIKE_SSH_HOST }}
@@ -19,9 +57,13 @@ jobs:
           SSH_KEY: ${{ secrets.SHIKE_SSH_KEY }}
           DEPLOY_DIR: ${{ secrets.SHIKE_DEPLOY_DIR }}
         run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          tar czf - --exclude='node_modules' --exclude='.next' --exclude='data' src prisma public scripts Dockerfile docker-compose.yml next.config.ts package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json .env.example \
-            | ssh -p "${SSH_PORT:-2222}" -o StrictHostKeyChecking=accept-new -i ~/.ssh/deploy_key "${SSH_USER:-root}@${SSH_HOST}" \
-                "mkdir -p ${DEPLOY_DIR:-/opt/shike} && tar xzf - -C ${DEPLOY_DIR:-/opt/shike} && cd ${DEPLOY_DIR:-/opt/shike} && docker compose up -d --build"
+          tar czf - \
+            --exclude='node_modules' --exclude='.next' --exclude='data' \
+            src prisma public scripts Dockerfile docker-compose.yml \
+            next.config.ts package.json pnpm-lock.yaml pnpm-workspace.yaml \
+            tsconfig.json postcss.config.mjs .env.example README.md deploy \
+            | ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key \
+                -o StrictHostKeyChecking=accept-new \
+                -o IdentitiesOnly=yes \
+                "$SSH_USER@$SSH_HOST" \
+                "mkdir -p $DEPLOY_DIR && tar xzf - -C $DEPLOY_DIR && cd $DEPLOY_DIR && docker compose up -d --build"
