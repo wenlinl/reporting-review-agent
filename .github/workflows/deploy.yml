@@ -43,6 +43,16 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
+          if ! head -1 ~/.ssh/deploy_key | grep -q 'BEGIN OPENSSH PRIVATE KEY'; then
+            echo "::error::SHIKE_SSH_KEY 不是有效的 OpenSSH 私钥（缺 BEGIN OPENSSH PRIVATE KEY 头），请重新粘贴 ~/.ssh/id_ed25519 全文"
+            exit 1
+          fi
+          if grep -q '\\\\n' ~/.ssh/deploy_key; then
+            echo "::error::SHIKE_SSH_KEY 包含字面 \\n，请重新粘贴（不要用转义换行）"
+            exit 1
+          fi
+          echo "== 密钥指纹（应为 SHA256:ydQYEReAyU+7uyuYclbFBoF1RIf+/bABDxSMuiKTkWk）=="
+          ssh-keygen -lf ~/.ssh/deploy_key 2>&1 || true
           ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=accept-new \
             -o IdentitiesOnly=yes \
