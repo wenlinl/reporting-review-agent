@@ -1981,13 +1981,14 @@ async function loadPrefs(){
 async function savePrefs(){
   if (!AUTH.user){ toast("登录后才能保存偏好"); return; }
   try {
-    await fetch(`${API_BASE}/api/members/prefs`, {
+    const res = await fetch(`${API_BASE}/api/members/prefs`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({ preferences: [...PREF_SEL] }),
       signal: AbortSignal.timeout(6000),
     });
+    if (res.ok) toast("偏好已保存 · 推荐将更精准");
   } catch (e) { /* 静默 */ }
 }
 
@@ -2412,7 +2413,7 @@ confirmBtn.addEventListener("click", () => {
       when, exp: exp.toISOString().slice(0,10), storage:"保鲜中" });
   }
   HANDLED.delete(r.name);
-  toast(`已录入「${r.name}」 · 同步至 4 位家庭成员`);
+  toast(`已录入「${r.name}」 · 同步至 ${SRV_MEMBERS.length || 1} 位家庭成员`);
   renderHome(); renderChips(); renderInv(); renderRecipe();
   go("inv");
 });
