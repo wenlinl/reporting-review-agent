@@ -462,6 +462,23 @@ main{position:absolute;top:calc(env(safe-area-inset-top) + 104px);bottom:calc(en
 .account-card .ac-mail{font-size:11px;color:var(--ink-2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px}
 .account-card .ac-btn{border:none;border-radius:999px;background:var(--red);color:#fff;font-size:12px;font-weight:600;padding:8px 14px;flex:none}
 .account-card .ac-btn.ghost{background:#fff;border:1px solid rgba(212,47,31,.35);color:var(--red)}
+.res-note{font-size:10.5px;color:var(--ink-2);margin-top:6px;text-align:center}
+.buy-link{color:var(--red);font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;margin-left:8px}
+.shop-copy{display:flex;justify-content:flex-end;margin-bottom:8px}
+.shop-copy button{border:1px solid rgba(212,47,31,.35);background:#fff;color:var(--red);font-size:12px;font-weight:600;border-radius:999px;padding:6px 14px}
+.onboard-card{background:linear-gradient(135deg,#fdf0cd,#fce2d7);border:1px solid rgba(226,60,43,.16);border-radius:18px;padding:16px;margin-bottom:12px}
+.onboard-card h3{font-size:16px;font-weight:800;color:var(--ink)}
+.onboard-card p{font-size:12px;color:var(--ink-2);margin:6px 0 12px;line-height:1.6}
+.onboard-acts{display:flex;gap:10px}
+.onboard-acts button{flex:1;border:none;border-radius:12px;padding:11px 0;font-size:13px;font-weight:700}
+.onboard-acts .ob-primary{background:linear-gradient(135deg,#e23c2b,#c93122);color:#fff}
+.onboard-acts .ob-ghost{background:#fff;color:var(--red);border:1px solid rgba(212,47,31,.3)}
+.switch-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px dashed var(--line);font-size:13.5px;color:var(--ink)}
+.switch-row:last-child{border-bottom:0}
+.switch-row input[type="checkbox"]{width:42px;height:24px;appearance:none;background:#e5d9cc;border-radius:999px;position:relative;transition:.2s;cursor:pointer}
+.switch-row input[type="checkbox"]:checked{background:var(--red)}
+.switch-row input[type="checkbox"]::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
+.switch-row input[type="checkbox"]:checked::after{left:20px}
 
 /* ---------- AI 助手 ---------- */
 .ai-fab{position:fixed;right:18px;bottom:calc(env(safe-area-inset-bottom) + 92px);z-index:70;width:52px;height:52px;border-radius:50%;border:none;background:linear-gradient(135deg,#e23c2b,#c93122);color:#fff;font-size:22px;box-shadow:0 10px 24px rgba(226,60,43,.35);display:flex;align-items:center;justify-content:center;transition:transform .18s ease}
@@ -573,6 +590,16 @@ main{position:absolute;top:calc(env(safe-area-inset-top) + 104px);bottom:calc(en
         <div><div class="t">你好，今天的冰箱状态</div><div class="s">今天也要好好吃饭 · 让每一餐都新鲜安心</div></div>
       </div>
 
+      <div class="onboard-card" id="onboardCard" style="display:none">
+        <h3>🍽️ 冰箱还是空的</h3>
+        <p>先加几样常用食材，食刻就能帮你算临期、推荐菜谱、记录消耗。</p>
+        <div class="onboard-acts">
+          <button class="ob-primary" data-act="starter-add">＋ 一键添加常用食材</button>
+          <button class="ob-ghost" data-view="tab:scan">📷 去扫描</button>
+        </div>
+        <div class="pref-caption" style="margin-top:8px">⚠️ 保质期与建议由 AI 估算，请以实物包装为准</div>
+      </div>
+
       <div class="fridge">
         <div class="fridge-left">
           <div class="fridge-head">冰箱总览 <span class="upd" id="updAt">同步中…</span></div>
@@ -655,6 +682,7 @@ main{position:absolute;top:calc(env(safe-area-inset-top) + 104px);bottom:calc(en
           <b id="resName">西兰花</b>
           <span class="res-keep" id="resKeep">建议保鲜 <i>3</i> 天</span>
           <div class="res-conf" id="resConf">置信度 96% · 建议放入冰箱</div>
+          <div class="res-note">⚠️ 保质期与建议由 AI 估算，请以实物包装为准</div>
         </div>
         <div class="res-sync"><span class="si">👥</span>录入后将同步至<br>家庭成员</div>
       </div>
@@ -819,7 +847,7 @@ main{position:absolute;top:calc(env(safe-area-inset-top) + 104px);bottom:calc(en
         <button class="menu-item" data-view="members"><span class="mi-ic" style="background:#fde3dc">👨‍👩‍👧</span>家庭共享管理<span class="mi-arrow">›</span></button>
         <button class="menu-item" data-view="shop"><span class="mi-ic" style="background:#fdf0cd">🛒</span>购物清单<span class="mi-arrow">›</span></button>
         <button class="menu-item" data-view="favorites"><span class="mi-ic" style="background:#fde3dc">❤️</span>我的收藏<span class="mi-arrow">›</span></button>
-        <button class="menu-item" data-view="notif"><span class="mi-ic" style="background:#dcefdc">🔔</span>通知设置<span class="mi-arrow">›</span></button>
+        <button class="menu-item" data-view="notifset"><span class="mi-ic" style="background:#dcefdc">🔔</span>通知设置<span class="mi-arrow">›</span></button>
         <button class="menu-item" data-view="nutrition"><span class="mi-ic" style="background:#ddebfa">🥗</span>营养档案<span class="mi-arrow">›</span></button>
         <button class="menu-item" data-view="prefs"><span class="mi-ic" style="background:#fdf3e0">🌶️</span>口味偏好<span class="mi-arrow">›</span></button>
         <button class="menu-item" id="helpItem"><span class="mi-ic" style="background:#f2e6d8">💬</span>帮助与反馈<span class="mi-arrow">›</span></button>
@@ -959,6 +987,8 @@ function go(page){
 
 /* ================= 渲染：首页 ================= */
 function renderHome(){
+  const ob = document.getElementById("onboardCard");
+  if (ob) ob.style.display = (AUTH.user && !INV.length) ? "" : "none";
   const soon = INV.filter(i => daysLeft(i.exp) <= 2 && !HANDLED.has(i.name));
   skAnimateCount(document.getElementById("kpiTotal"), INV.length);
   skAnimateCount(document.getElementById("kpiSoon"), soon.length);
@@ -1122,6 +1152,7 @@ const VIEW_CFG = {
   trace:    { title:"追溯记录", right:"" },
   prefs:    { title:"口味偏好", right:"保存" },
   notif:    { title:"通知中心", right:"全部已读" },
+  notifset: { title:"通知设置", right:"保存" },
   favorites:{ title:"我的收藏", right:"" },
   quickAdd: { title:"快速录入", right:"保存" },
   filter:   { title:"筛选", right:"重置" },
@@ -1160,6 +1191,7 @@ function renderView(name, p){
   if (name === "trace") return viewTrace();
   if (name === "prefs") return viewPrefs();
   if (name === "notif") return viewNotif();
+  if (name === "notifset") return viewNotifSet();
   if (name === "favorites") return viewFavorites();
   if (name === "quickAdd") return viewQuickAdd();
   if (name === "filter") return viewFilter();
@@ -1174,6 +1206,7 @@ function viewShop(){
   const list = SRV_SHOP || SHOP;
   const undone = list.filter(s => !s.done).length;
   return `
+  <div class="shop-copy"><button data-act="shop-copy">📋 复制清单</button></div>
   <div class="shop-add-row">
     <input id="shopAddInput" placeholder="添加食材，如 牛奶…">
     <button class="btn-primary" data-act="shop-add-input">＋ 添加</button>
@@ -1184,6 +1217,7 @@ function viewShop(){
       <div class="shop-item">
         <button class="shop-check ${s.done ? "on" : ""}" data-act="shop-toggle" data-i="${i}" data-id="${s.id || ""}">${s.done ? "✓" : ""}</button>
         <span class="shop-name ${s.done ? "done" : ""}">${s.name}</span>
+        ${s.done ? "" : `<a class="buy-link" target="_blank" rel="noopener" href="https://search.jd.com/Search?keyword=${encodeURIComponent(s.name)}">去购买 ›</a>`}
         <div class="shop-qty">
           <button class="qty-btn" data-act="shop-qty" data-i="${i}" data-id="${s.id || ""}" data-d="-1">−</button>
           ${s.qty} ${s.unit || ""}
@@ -1265,7 +1299,9 @@ function viewRemind(){
         <button class="mini-btn red" data-act="remind-cook" data-name="${it.name}">做菜谱</button>
         <button class="mini-btn ghost" data-act="remind-done" data-name="${it.name}">已处理</button>
       </div>
-    </div>`;}).join("")}</div>` :
+    </div>`;}).join("")}
+    <div class="pref-caption" style="margin-top:8px">⚠️ 保质期与建议由 AI 估算，请以实物包装为准</div>
+    </div>` :
     `<div class="empty-box">🎉 暂无临期食材<br><span style="font-size:11px">库存很健康，继续保持</span></div>`;
 }
 
@@ -1390,6 +1426,55 @@ function viewNotif(){
     </button>`).join("")}</div>`;
 }
 
+let SRV_NOTIF_SET = null;
+function viewNotifSet(){
+  const s = SRV_NOTIF_SET || {};
+  const days = [1, 2, 3, 5, 7];
+  return `
+  <div class="sv-card">
+    <div class="sv-sec">提醒内容</div>
+    <label class="switch-row"><span>临期 / 过期提醒</span><input type="checkbox" id="nsExpiry" ${s.expiryEnabled === false ? "" : "checked"}></label>
+    <label class="switch-row"><span>每日菜谱推荐</span><input type="checkbox" id="nsRecipe" ${s.recipeEnabled === false ? "" : "checked"}></label>
+    <div class="switch-row"><span>提前提醒天数</span><select id="nsDays" class="form-input" style="width:96px">${days.map(d => `<option ${Number(s.expiryDays || 3) === d ? "selected" : ""}>${d}</option>`).join("")}</select></div>
+    <div class="pref-caption" style="margin-top:8px">生成的通知会出现在「通知中心」，每日自动汇总</div>
+  </div>
+  <div class="sv-card">
+    <div class="sv-sec">推送通道</div>
+    <div class="pref-caption">当前为站内通知；微信 / App 推送接入后这里会多出开关（接入中）</div>
+    <button class="mini-btn red" style="margin-top:8px" data-act="notif-test">发送测试通知</button>
+  </div>`;
+}
+async function loadNotifSet(){
+  try {
+    const res = await fetch(`${API_BASE}/api/notifications/settings`, { credentials: "include", signal: AbortSignal.timeout(6000) });
+    if (res.status === 401){ SRV_NOTIF_SET = null; return; }
+    const j = await res.json();
+    SRV_NOTIF_SET = (j && j.settings) ? j.settings : null;
+    const view = document.getElementById("svBody");
+    if (view && currentView && currentView.name === "notifset") refreshView();
+  } catch (e) { SRV_NOTIF_SET = null; }
+}
+async function saveNotifSet(){
+  if (!AUTH.user){ toast("登录后才能保存设置"); return; }
+  const body = {
+    expiryEnabled: document.getElementById("nsExpiry")?.checked ?? true,
+    recipeEnabled: document.getElementById("nsRecipe")?.checked ?? true,
+    expiryDays: Number(document.getElementById("nsDays")?.value || 3),
+  };
+  try {
+    const res = await fetch(`${API_BASE}/api/notifications/settings`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(6000),
+    });
+    const j = await res.json();
+    if (res.ok && j && j.settings){ SRV_NOTIF_SET = j.settings; toast("通知设置已保存"); closeView(); }
+    else toast((j && j.error) || "保存失败");
+  } catch (e) { toast("网络错误，请稍后重试"); }
+}
+
 function viewFavorites(){
   const favs = RECIPES.filter(r => FAVS.has(r.name));
   return favs.length ? favs.map(r => recipeCard(r, true)).join("") :
@@ -1432,7 +1517,8 @@ function viewItem(name){
     <button class="btn-outline" data-act="item-waste" data-name="${it.name}">🗑️ 扔掉了</button>
     <button class="btn-outline" data-act="item-expired" data-name="${it.name}">⏰ 已过期清理</button>
     <button class="btn-primary" data-act="item-restock" data-name="${it.name}">🛒 加入购物清单</button>
-  </div>`;
+  </div>
+  <div class="pref-caption" style="margin-top:8px">⚠️ 保质期与建议由 AI 估算，请以实物包装为准</div>`;
 }
 
 function viewRecipe(idx, banner){
@@ -1483,6 +1569,7 @@ function act(action, el){
     const v = rest[0];
     if (v === "shop"){ const list = SRV_SHOP || SHOP; list.forEach(s => s.done = true); if (SRV_SHOP) list.forEach(s => { if (s.id) fetch(`${API_BASE}/api/shopping-list/${s.id}`, { method:"PATCH", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ done: true }) }).catch(()=>{}); }); toast("已完成项已清空"); refreshView(); }
     else if (v === "prefs"){ savePrefs(); closeView(); }
+    else if (v === "notifset"){ saveNotifSet(); }
     else if (v === "notif"){
       SRV_NOTIFS.forEach(n => { if (n.unread && n.id){ n.unread = false; fetch(`${API_BASE}/api/notifications/${n.id}`, { method:"PATCH", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ unread:false }) }).catch(()=>{}); } });
       updateBellDot(); toast("通知已全部标记为已读"); refreshView();
@@ -1508,6 +1595,36 @@ function act(action, el){
       fetch(`${API_BASE}/api/shopping-list`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ name: el.dataset.name, qty:1, unit:"份", source:"recipe" }) }).catch(()=>{});
     }
     toast(`「${el.dataset.name}」已加入购物清单`);
+  } else if (a === "shop-copy"){
+    const list = SRV_SHOP || [];
+    const text = list.length
+      ? list.map(s => `${s.done ? "✓" : "☐"} ${s.name}${s.qty > 1 ? ` ×${s.qty}` : ""}${s.unit ? " " + s.unit : ""}`).join("\n")
+      : "购物清单是空的";
+    const done = () => toast("清单已复制，去买菜 App 粘贴吧 🛒");
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(() => { prompt("复制清单：", text); });
+    } else {
+      prompt("复制清单：", text);
+    }
+  } else if (a === "notif-test"){
+    fetch(`${API_BASE}/api/notifications`, { method:"POST", headers:{"Content-Type":"application/json"}, credentials:"include" })
+      .then(() => toast("测试通知已发送 ✓"))
+      .catch(() => toast("发送失败"));
+  } else if (a === "starter-add"){
+    const STARTER = [
+      { name:"西兰花", category:"蔬菜", expiryDays:3 }, { name:"牛奶", category:"乳品", expiryDays:5 },
+      { name:"鸡蛋", category:"蛋类", expiryDays:14 }, { name:"番茄", category:"蔬菜", expiryDays:4 },
+      { name:"生菜", category:"蔬菜", expiryDays:3 }, { name:"苹果", category:"水果", expiryDays:10 },
+      { name:"酸奶", category:"乳品", expiryDays:7 }, { name:"面包", category:"零食", expiryDays:5 },
+    ];
+    fetch(`${API_BASE}/api/items/batch`, {
+      method:"POST", headers:{ "Content-Type":"application/json" }, credentials:"include",
+      body: JSON.stringify({ items: STARTER }),
+    }).then(async (r) => {
+      const j = await r.json().catch(() => ({}));
+      if (j && j.code === 0){ toast(`已添加 ${j.created} 种、补充 ${j.updated} 种 🎉`); reloadAllData(); }
+      else toast((j && j.msg) || "添加失败");
+    }).catch(() => toast("网络错误"));
   } else if (a === "detail-fav"){
     const n = el.dataset.name;
     FAVS.has(n) ? FAVS.delete(n) : FAVS.add(n);
@@ -2195,14 +2312,14 @@ function enterApp(user){
   renderAccountCard();
   // 登录后拉取全量真实数据
   syncInventory(); loadShoppingHub(); loadWaste(); syncRecipes();
-  loadMembers(); loadNotifications(); loadLogs(); loadTrace(); loadPrefs(); loadNutrition(); loadReminders();
+  loadMembers(); loadNotifications(); loadLogs(); loadTrace(); loadPrefs(); loadNutrition(); loadReminders(); loadNotifSet();
   aiRecommend();
   toast(user ? `欢迎回来，${user.name}` : "已进入食刻");
 }
 
 function reloadAllData(){
   syncInventory(); loadShoppingHub(); loadWaste(); syncRecipes();
-  loadMembers(); loadNotifications(); loadLogs(); loadTrace(); loadPrefs(); loadNutrition(); loadReminders();
+  loadMembers(); loadNotifications(); loadLogs(); loadTrace(); loadPrefs(); loadNutrition(); loadReminders(); loadNotifSet();
   aiRecommend();
 }
 
@@ -2310,7 +2427,7 @@ tick(); setInterval(tick, 10000);
 renderHome(); renderChips(); renderInv(); renderRecipe();
 syncInventory();
 loadShoppingHub(); loadWaste(); syncRecipes();
-loadMembers(); loadNotifications(); loadLogs(); loadTrace(); loadPrefs(); loadReminders(); aiRecommend();
+loadMembers(); loadNotifications(); loadLogs(); loadTrace(); loadPrefs(); loadReminders(); loadNotifSet(); aiRecommend();
 const arch0 = document.getElementById("archN"); if (arch0) arch0.textContent = ARCHIVED.length;
 startCamera();
 const hash = location.hash.slice(1);

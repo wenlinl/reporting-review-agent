@@ -23,4 +23,17 @@ export async function GET() {
   });
 }
 
+/** 发送一条测试通知（通知设置页「测试」按钮）。 */
+export async function POST() {
+  const n = await prisma.notification.create({
+    data: {
+      type: "system",
+      title: "测试通知",
+      desc: "通知通道正常 ✓",
+      view: "notif",
+    },
+  });
+  return xzdJson({ code: 0, notification: n }, 201);
+}
+
 export { xzdOptions as OPTIONS };
