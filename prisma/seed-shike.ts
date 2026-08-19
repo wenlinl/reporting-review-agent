@@ -15,6 +15,17 @@ async function main() {
     else await prisma.member.create({ data: m });
   }
 
+  // 演示家庭：新用户可用邀请码 SHK-DEMO01 加入体验家庭共享
+  const family = await prisma.family.upsert({
+    where: { inviteCode: "SHK-DEMO01" },
+    update: { name: "幸福一家" },
+    create: { name: "幸福一家", inviteCode: "SHK-DEMO01" },
+  });
+  await prisma.member.updateMany({
+    where: { name: { in: members.map((m) => m.name) } },
+    data: { familyId: family.id },
+  });
+
   const containers = [
     { name: "冰箱", icon: "🧊", sort: 1, builtIn: true },
     { name: "零食柜", icon: "🍿", sort: 2, builtIn: true },

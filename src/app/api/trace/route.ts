@@ -1,21 +1,26 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { xzdJson, xzdOptions } from "@/lib/http";
+import { requireFamilyCtx } from "@/lib/familyCtx";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-async function resolveItemId(name?: string | null, itemId?: string | null) {
+async function resolveItemId(familyId: string, name?: string | null, itemId?: string | null) {
   if (itemId) return itemId;
   if (!name) return null;
-  const it = await prisma.foodItem.findFirst({ where: { name: { contains: name } } });
+  const it = await prisma.foodItem.findFirst({
+    where: { name: { contains: name }, familyId },
+  });
   return it?.id || null;
 }
 
 export async function GET(req: NextRequest) {
+  const fam = await requireFamilyCtx();
+  if (!fam.ctx) return xzdJson({ code: 1, msg: fam.error }, fam.status);
   const name = req.nextUrl.searchParams.get("name") || undefined;
   const itemId = req.nextUrl.searchParams.get("itemId") || undefined;
-  const id = await resolveItemId(name, itemId);
+  const id = await resolveItemId(fam.ctx.familyId, name, itemId);
   const trace = id ? await prisma.foodTrace.findUnique({ where: { itemId: id } }) : null;
   return xzdJson({
     code: 0,
@@ -34,6 +39,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const fam = await requireFamilyCtx();
+  if (!fam.ctx) return xzdJson({ code: 1, msg: fam.error }, fam.status);
   const body = (await req.json().catch(() => null)) as {
     name?: string;
     itemId?: string;
@@ -44,7 +51,7 @@ export async function POST(req: NextRequest) {
     report?: string;
     inTime?: string;
   } | null;
-  const id = await resolveItemId(body?.name, body?.itemId);
+  const id = await resolveItemId(fam.ctx.familyId, body?.name, body?.itemId);
   if (!id) return xzdJson({ code: 1, msg: "未找到对应库存食材" });
   const trace = await prisma.foodTrace.upsert({
     where: { itemId: id },

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { xzdJson, xzdOptions } from "@/lib/http";
+import { requireFamilyCtx } from "@/lib/familyCtx";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,6 +11,8 @@ const DEVICE = "h5-manual";
 
 /** 批量录入（冷启动引导用）：一次添加一组常用食材，重复名称累加数量。 */
 export async function POST(req: NextRequest) {
+  const fam = await requireFamilyCtx();
+  if (!fam.ctx) return xzdJson({ code: 1, msg: fam.error }, fam.status);
   const body = (await req.json().catch(() => ({}))) as {
     items?: Array<{
       name?: string;
@@ -40,13 +43,19 @@ export async function POST(req: NextRequest) {
     if (exist) {
       await prisma.foodItem.update({
         where: { id: exist.id },
-        data: { quantity: exist.quantity + 1, expiryDate, daysLeft: expiryDays },
+        data: {
+          quantity: exist.quantity + 1,
+          expiryDate,
+          daysLeft: expiryDays,
+          familyId: fam.ctx.familyId,
+        },
       });
       updated++;
     } else {
       await prisma.foodItem.create({
         data: {
           deviceId: DEVICE,
+          familyId: fam.ctx.familyId,
           name,
           category: String(raw.category || "其他").slice(0, 16),
           container,

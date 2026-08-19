@@ -2,17 +2,23 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { chatJson } from "@/lib/ai";
 import { xzdJson, xzdOptions } from "@/lib/http";
+import { requireFamilyCtx } from "@/lib/familyCtx";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /** AI 今日推荐：结合当前库存 + 家庭成员口味偏好推荐菜谱（AI 失败时规则兜底）。 */
 export async function POST(req: NextRequest) {
+  const fam = await requireFamilyCtx();
+  if (!fam.ctx) return xzdJson({ code: 1, msg: fam.error }, fam.status);
   const body = (await req.json().catch(() => ({}))) as { limit?: number };
   const limit = Math.min(6, Math.max(1, Number(body.limit) || 3));
 
   const [items, recipes, members] = await Promise.all([
-    prisma.foodItem.findMany({ select: { name: true, quantity: true } }),
+    prisma.foodItem.findMany({
+      where: { familyId: fam.ctx.familyId },
+      select: { name: true, quantity: true },
+    }),
     prisma.recipe.findMany({}),
     prisma.member.findMany({ select: { preferences: true } }),
   ]);

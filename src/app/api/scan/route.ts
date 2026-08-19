@@ -7,6 +7,7 @@ import { xzdJson, xzdOptions } from "@/lib/http";
 import { verifyDevice } from "@/lib/deviceAuth";
 import { rateLimit } from "@/lib/rateLimit";
 import { getSession } from "@/lib/auth";
+import { requireFamilyCtx } from "@/lib/familyCtx";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -73,7 +74,8 @@ export async function POST(req: NextRequest) {
   // 鉴权：固件走 X-Device-Token，H5 手机扫描走登录会话
   const session = await getSession();
   const devAuth = await verifyDevice(req, deviceId);
-  if (!devAuth.ok && !session) {
+  const fam = await requireFamilyCtx();
+  if (!devAuth.ok && !fam.ctx) {
     return xzdJson({ code: 401, msg: "设备鉴权失败" }, 401);
   }
   // 限流：每台设备每分钟最多 30 次
@@ -142,9 +144,12 @@ export async function POST(req: NextRequest) {
       create: { deviceId, name: deviceId, lastSeenAt: new Date() },
     });
   }
-  const memberId = session
-    ? (await prisma.member.findUnique({ where: { userId: session.id } }))?.id || null
-    : device.memberId || null;
+  const familyId = devAuth.ok
+    ? device.familyId
+    : fam.ctx!.familyId;
+  const memberId = devAuth.ok
+    ? device.memberId || null
+    : fam.ctx!.memberId;
   await prisma.deviceLog.create({
     data: { deviceId, event: recognized ? "SCAN_OK" : "LOW_CONF", msg: name.slice(0, 100) || note.slice(0, 100) },
   });
@@ -192,12 +197,14 @@ export async function POST(req: NextRequest) {
             imagePath,
             scannedAt,
             memberId: memberId || exist.memberId,
+            familyId: familyId || exist.familyId,
           },
         });
       } else {
         await prisma.foodItem.create({
           data: {
             deviceId,
+            familyId,
             memberId,
             name,
             category,
@@ -232,6 +239,7 @@ export async function POST(req: NextRequest) {
     data: {
       requestId: requestId || undefined,
       deviceId,
+      familyId,
       memberId,
       action,
       name: recognized ? name : "未识别",

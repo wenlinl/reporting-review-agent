@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { xzdJson, xzdOptions } from "@/lib/http";
+import { requireFamilyCtx } from "@/lib/familyCtx";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,9 +14,13 @@ function startOfDay(d: Date) {
 
 /** 库存列表：按容器筛选，按剩余天数升序（软件端大屏 / H5 / 设备共用）。 */
 export async function GET(req: NextRequest) {
+  const fam = await requireFamilyCtx();
+  if (!fam.ctx) return xzdJson({ code: 1, msg: fam.error }, fam.status);
   const container = req.nextUrl.searchParams.get("container");
   const where =
-    container && container !== "全部" && container !== "" ? { container } : {};
+    container && container !== "全部" && container !== ""
+      ? { container, familyId: fam.ctx.familyId }
+      : { familyId: fam.ctx.familyId };
   const [rows, members] = await Promise.all([
     prisma.foodItem.findMany({
       where,
@@ -56,6 +61,8 @@ export async function GET(req: NextRequest) {
 
 /** 手动录入（H5 快速录入）：无图片，直接写库存。 */
 export async function POST(req: NextRequest) {
+  const fam = await requireFamilyCtx();
+  if (!fam.ctx) return xzdJson({ code: 1, msg: fam.error }, fam.status);
   const body = (await req.json().catch(() => null)) as {
     name?: string;
     category?: string;
@@ -95,6 +102,7 @@ export async function POST(req: NextRequest) {
         keepDays,
         recordMethod: "manual",
         memberId: body?.memberId || undefined,
+        familyId: fam.ctx.familyId,
         scannedAt,
       },
     });
@@ -102,6 +110,7 @@ export async function POST(req: NextRequest) {
     await prisma.foodItem.create({
       data: {
         deviceId,
+        familyId: fam.ctx.familyId,
         memberId: body?.memberId || null,
         name,
         category: body?.category || null,
@@ -120,6 +129,7 @@ export async function POST(req: NextRequest) {
   await prisma.scanLog.create({
     data: {
       deviceId,
+      familyId: fam.ctx.familyId,
       memberId: body?.memberId || null,
       action: "in",
       name,

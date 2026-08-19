@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { chatJson } from "@/lib/ai";
 import { xzdJson, xzdOptions } from "@/lib/http";
+import { requireFamilyCtx } from "@/lib/familyCtx";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,7 +42,11 @@ async function aiSuggestions(
 
 /** 临期 / 过期提醒列表（含 AI 处理建议）。 */
 export async function GET() {
-  const rows = await prisma.foodItem.findMany({});
+  const fam = await requireFamilyCtx();
+  if (!fam.ctx) return xzdJson({ code: 1, msg: fam.error }, fam.status);
+  const rows = await prisma.foodItem.findMany({
+    where: { familyId: fam.ctx.familyId },
+  });
   const today = startOfDay(new Date());
   const soon: Array<Record<string, unknown>> = [];
   const expired: Array<Record<string, unknown>> = [];

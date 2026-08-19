@@ -2,12 +2,15 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { chatJson } from "@/lib/ai";
 import { xzdJson, xzdOptions } from "@/lib/http";
+import { requireFamilyCtx } from "@/lib/familyCtx";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /** 食刻家庭饮食助手：基于真实库存/菜谱/购物清单回答问题（AI 失败时规则兜底）。 */
 export async function POST(req: NextRequest) {
+  const fam = await requireFamilyCtx();
+  if (!fam.ctx) return xzdJson({ code: 1, msg: fam.error }, fam.status);
   const { message } = await req.json().catch(() => ({}));
   const question = String(message || "").trim().slice(0, 500);
   if (!question) {
@@ -15,9 +18,15 @@ export async function POST(req: NextRequest) {
   }
 
   const [items, recipes, shop] = await Promise.all([
-    prisma.foodItem.findMany({ orderBy: [{ daysLeft: "asc" }] }),
+    prisma.foodItem.findMany({
+      where: { familyId: fam.ctx.familyId },
+      orderBy: [{ daysLeft: "asc" }],
+    }),
     prisma.recipe.findMany({ take: 10 }),
-    prisma.shoppingListItem.findMany({ where: { done: false }, take: 20 }),
+    prisma.shoppingListItem.findMany({
+      where: { done: false, familyId: fam.ctx.familyId },
+      take: 20,
+    }),
   ]);
   const ctx = {
     inventory: items.map((i) =>

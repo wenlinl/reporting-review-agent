@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { chatJson } from "@/lib/ai";
 import { xzdJson, xzdOptions } from "@/lib/http";
+import { requireFamilyCtx } from "@/lib/familyCtx";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,6 +17,8 @@ const NUT_LABELS: Record<string, string> = {
 
 /** 营养分析：基于当天消耗/取出/过期食材，聚合识别库营养数据 + AI 总结。 */
 export async function GET(req: NextRequest) {
+  const fam = await requireFamilyCtx();
+  if (!fam.ctx) return xzdJson({ code: 1, msg: fam.error }, fam.status);
   const dateParam = req.nextUrl.searchParams.get("date");
   const start = dateParam
     ? new Date(dateParam + "T00:00:00")
@@ -25,7 +28,7 @@ export async function GET(req: NextRequest) {
   end.setDate(end.getDate() + 1);
 
   const logs = await prisma.consumptionLog.findMany({
-    where: { createdAt: { gte: start, lt: end } },
+    where: { createdAt: { gte: start, lt: end }, familyId: fam.ctx.familyId },
     orderBy: { createdAt: "desc" },
   });
 

@@ -1,18 +1,23 @@
 import { prisma } from "@/lib/db";
 import { xzdJson, xzdOptions } from "@/lib/http";
+import { requireFamilyCtx } from "@/lib/familyCtx";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /** 最近活动流：扫描出入库 + 消耗/过期记录（H5 履历页用，均为数据库数据）。 */
 export async function GET() {
+  const fam = await requireFamilyCtx();
+  if (!fam.ctx) return xzdJson({ code: 1, msg: fam.error }, fam.status);
   const limit = 30;
   const [scans, consumes] = await Promise.all([
     prisma.scanLog.findMany({
+      where: { familyId: fam.ctx.familyId },
       orderBy: { createdAt: "desc" },
       take: limit,
     }),
     prisma.consumptionLog.findMany({
+      where: { familyId: fam.ctx.familyId },
       orderBy: { createdAt: "desc" },
       take: limit,
     }),

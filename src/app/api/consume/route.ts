@@ -1,12 +1,16 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { xzdJson, xzdOptions } from "@/lib/http";
+import { requireFamilyCtx } from "@/lib/familyCtx";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const fam = await requireFamilyCtx();
+  if (!fam.ctx) return xzdJson({ code: 1, msg: fam.error }, fam.status);
   const logs = await prisma.consumptionLog.findMany({
+    where: { familyId: fam.ctx.familyId },
     orderBy: { createdAt: "desc" },
     take: 200,
   });
@@ -32,6 +36,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const fam = await requireFamilyCtx();
+  if (!fam.ctx) return xzdJson({ code: 1, msg: fam.error }, fam.status);
   const body = (await req.json().catch(() => null)) as {
     name?: string;
     reason?: string;
@@ -47,7 +53,7 @@ export async function POST(req: NextRequest) {
   const qty = Math.max(1, Number(body?.quantity) || 1);
 
   const item = await prisma.foodItem.findFirst({
-    where: { name: { contains: name } },
+    where: { name: { contains: name }, familyId: fam.ctx.familyId },
     orderBy: { createdAt: "asc" },
   });
   if (item) {
@@ -60,7 +66,14 @@ export async function POST(req: NextRequest) {
   }
 
   const log = await prisma.consumptionLog.create({
-    data: { name, reason, quantity: qty, note: body?.note || null, memberId: body?.memberId || null },
+    data: {
+      familyId: fam.ctx.familyId,
+      name,
+      reason,
+      quantity: qty,
+      note: body?.note || null,
+      memberId: fam.ctx.memberId,
+    },
   });
   return xzdJson({ code: 0, log, remaining: item ? Math.max(0, item.quantity - qty) : 0 });
 }

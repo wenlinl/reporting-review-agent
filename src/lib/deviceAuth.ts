@@ -9,7 +9,15 @@ import type { NextRequest } from "next/server";
 export async function verifyDevice(
   req: NextRequest,
   deviceId: string,
-): Promise<{ ok: boolean; device?: { id: string; deviceId: string; memberId: string | null } }> {
+): Promise<{
+  ok: boolean;
+  device?: {
+    id: string;
+    deviceId: string;
+    memberId: string | null;
+    familyId: string | null;
+  };
+}> {
   const token = req.headers.get("x-device-token") || "";
   if (!token || !deviceId) return { ok: false };
   const device = await prisma.device.findUnique({ where: { deviceId } });
@@ -19,5 +27,13 @@ export async function verifyDevice(
   await prisma.device
     .update({ where: { id: device.id }, data: { lastSeenAt: new Date() } })
     .catch(() => {});
-  return { ok: true, device: { id: device.id, deviceId: device.deviceId, memberId: device.memberId } };
+  return {
+    ok: true,
+    device: {
+      id: device.id,
+      deviceId: device.deviceId,
+      memberId: device.memberId,
+      familyId: device.familyId,
+    },
+  };
 }

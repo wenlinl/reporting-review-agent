@@ -1,13 +1,19 @@
 import { prisma } from "@/lib/db";
 import { xzdJson, xzdOptions } from "@/lib/http";
+import { requireFamilyCtx } from "@/lib/familyCtx";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const fam = await requireFamilyCtx();
+  if (!fam.ctx) return xzdJson({ code: 1, msg: fam.error }, fam.status);
   const [recipes, items, prefs] = await Promise.all([
     prisma.recipe.findMany({ orderBy: { createdAt: "asc" } }),
-    prisma.foodItem.findMany({ select: { name: true } }),
+    prisma.foodItem.findMany({
+      where: { familyId: fam.ctx.familyId },
+      select: { name: true },
+    }),
     prisma.recipePreference.findMany(),
   ]);
   const names = new Set(items.map((i) => i.name));

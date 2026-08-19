@@ -20,16 +20,28 @@ model User {
   member       Member?
 }
 
+model Family {
+  id         String   @id @default(cuid())
+  name       String
+  inviteCode String   @unique
+  createdAt  DateTime @default(now())
+  members    Member[]
+}
+
 model Member {
   id                  String   @id @default(cuid())
   userId              String?  @unique // 关联网站账号（注册时自动创建）
   user                User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  familyId            String?  // 所属家庭；null = 尚未加入家庭
+  family              Family?  @relation(fields: [familyId], references: [id], onDelete: SetNull)
   name                String
-  role                String   @default("member") // admin | member
+  role                String   @default("member") // admin(家庭创建者) | member
   avatar              String?
   responsibleCategory String?
   preferences         String?  // JSON：["清淡","家常"]
   createdAt           DateTime @default(now())
+
+  @@index([familyId])
 }
 
 // ==================== 设备 ====================
@@ -38,6 +50,7 @@ model Device {
   id              String    @id @default(cuid())
   deviceId        String    @unique
   tokenHash       String?   // 设备 Token 的 bcrypt 哈希（固件 X-Device-Token 校验）
+  familyId        String?   // 设备归属家庭（扫描入库归属该家庭）
   name            String?
   firmwareVersion String?
   memberId        String?
@@ -95,6 +108,7 @@ model FoodCatalog {
 model FoodItem {
   id           String    @id @default(cuid())
   deviceId     String
+  familyId     String?
   memberId     String?
   name         String
   category     String?
@@ -122,6 +136,7 @@ model ScanLog {
   id           String   @id @default(cuid())
   deviceId     String
   requestId    String?  @unique // 固件幂等键：网络重试不会重复入库
+  familyId     String?
   memberId     String?
   action       String // in | out
   name         String
@@ -159,6 +174,7 @@ model FoodTrace {
 
 model ShoppingListItem {
   id        String    @id @default(cuid())
+  familyId  String?
   name      String
   qty       Int       @default(1)
   unit      String?
@@ -171,6 +187,7 @@ model ShoppingListItem {
 
 model Notification {
   id        String   @id @default(cuid())
+  familyId  String?
   type      String   // expiry | recipe | member | shop | system
   title     String
   desc      String?
@@ -191,13 +208,17 @@ model ReminderRecord {
 }
 
 model ReminderSetting {
-  id    String @id @default(cuid())
-  key   String @unique
-  value String // JSON
+  id       String @id @default(cuid())
+  familyId String?
+  key      String
+  value    String // JSON
+
+  @@unique([familyId, key])
 }
 
 model ConsumptionLog {
   id        String   @id @default(cuid())
+  familyId  String?
   name      String
   reason    String   // consumed | wasted | expired
   quantity  Int      @default(1)
@@ -226,6 +247,7 @@ model Recipe {
 
 model WeeklyMealPlan {
   id        String   @id @default(cuid())
+  familyId  String?
   weekStart DateTime
   date      DateTime
   recipeId  String
