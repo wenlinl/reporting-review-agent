@@ -28,13 +28,19 @@ export async function PATCH(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "请先登录" }, { status: 401 });
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const next: Record<string, unknown> = { ...DEFAULTS, ...body };
-  // 白名单校验
+  // 只覆盖请求中出现的字段，避免部分更新把其它开关关掉
   for (const k of ["expiryEnabled", "recipeEnabled", "memberEnabled"]) {
-    next[k] = Boolean(body[k]);
+    if (k in body) next[k] = Boolean(body[k]);
   }
-  next.expiryDays = Math.min(14, Math.max(1, Number(body.expiryDays) || 3));
-  next.quietStart = /^\d{2}:\d{2}$/.test(String(body.quietStart || "")) ? body.quietStart : DEFAULTS.quietStart;
-  next.quietEnd = /^\d{2}:\d{2}$/.test(String(body.quietEnd || "")) ? body.quietEnd : DEFAULTS.quietEnd;
+  if ("expiryDays" in body) {
+    next.expiryDays = Math.min(14, Math.max(1, Number(body.expiryDays) || 3));
+  }
+  if ("quietStart" in body && /^\d{2}:\d{2}$/.test(String(body.quietStart || ""))) {
+    next.quietStart = body.quietStart;
+  }
+  if ("quietEnd" in body && /^\d{2}:\d{2}$/.test(String(body.quietEnd || ""))) {
+    next.quietEnd = body.quietEnd;
+  }
   await prisma.reminderSetting.upsert({
     where: { key: KEY },
     update: { value: JSON.stringify(next) },
