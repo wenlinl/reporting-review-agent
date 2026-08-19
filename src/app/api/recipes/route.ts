@@ -14,7 +14,9 @@ export async function GET() {
       where: { familyId: fam.ctx.familyId },
       select: { name: true },
     }),
-    prisma.recipePreference.findMany(),
+    prisma.recipePreference.findMany({
+      where: { familyId: fam.ctx.familyId },
+    }),
   ]);
   const names = new Set(items.map((i) => i.name));
   const prefMap = new Map(prefs.map((p) => [p.recipeId, p]));

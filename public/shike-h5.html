@@ -874,6 +874,8 @@ main{position:absolute;top:calc(env(safe-area-inset-top) + 104px);bottom:calc(en
         <button class="menu-item" data-view="notifset"><span class="mi-ic" style="background:#dcefdc">🔔</span>通知设置<span class="mi-arrow">›</span></button>
         <button class="menu-item" data-view="nutrition"><span class="mi-ic" style="background:#ddebfa">🥗</span>营养档案<span class="mi-arrow">›</span></button>
         <button class="menu-item" data-view="prefs"><span class="mi-ic" style="background:#fdf3e0">🌶️</span>口味偏好<span class="mi-arrow">›</span></button>
+        <button class="menu-item" data-view="archived"><span class="mi-ic" style="background:#f2e6d8">🗂️</span>已处理记录<span class="mi-arrow">›</span></button>
+        <button class="menu-item" data-view="waste"><span class="mi-ic" style="background:#fdf0cd">🗑️</span>浪费统计<span class="mi-arrow">›</span></button>
         <button class="menu-item" id="helpItem"><span class="mi-ic" style="background:#f2e6d8">💬</span>帮助与反馈<span class="mi-arrow">›</span></button>
         <button class="menu-item" id="aboutItem"><span class="mi-ic" style="background:#f2e6d8">ℹ️</span>关于食刻<span class="mi-arrow">›</span></button>
       </div>
@@ -1670,9 +1672,9 @@ function act(action, el){
       .catch(() => toast("发送失败"));
   } else if (a === "starter-add"){
     const STARTER = [
-      { name:"西兰花", category:"蔬菜", expiryDays:3 }, { name:"牛奶", category:"乳品", expiryDays:5 },
+      { name:"西兰花", category:"蔬菜", expiryDays:3 }, { name:"牛奶", category:"乳品", expiryDays:2 },
       { name:"鸡蛋", category:"蛋类", expiryDays:14 }, { name:"番茄", category:"蔬菜", expiryDays:4 },
-      { name:"生菜", category:"蔬菜", expiryDays:3 }, { name:"苹果", category:"水果", expiryDays:10 },
+      { name:"生菜", category:"蔬菜", expiryDays:1 }, { name:"苹果", category:"水果", expiryDays:10 },
       { name:"酸奶", category:"乳品", expiryDays:7 }, { name:"面包", category:"零食", expiryDays:5 },
     ];
     fetch(`${API_BASE}/api/items/batch`, {

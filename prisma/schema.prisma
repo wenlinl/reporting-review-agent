@@ -259,10 +259,13 @@ model WeeklyMealPlan {
 
 model RecipePreference {
   id           String    @id @default(cuid())
-  recipeId     String    @unique
+  familyId     String?   // 收藏按家庭隔离
+  recipeId     String
   liked        Boolean   @default(false)
   rating       Int?
   timesCooked  Int       @default(0)
   lastCookedAt DateTime?
   updatedAt    DateTime  @updatedAt
+
+  @@unique([recipeId, familyId])
 }

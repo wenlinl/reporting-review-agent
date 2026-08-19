@@ -1,12 +1,15 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { xzdJson, xzdOptions } from "@/lib/http";
+import { requireFamilyCtx } from "@/lib/familyCtx";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /** 收藏 / 做过：POST /api/recipes/[id]  body { action:"favorite", liked } 或 { action:"cooked" } */
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  const fam = await requireFamilyCtx();
+  if (!fam.ctx) return xzdJson({ code: 1, msg: fam.error }, fam.status);
   const { id } = await ctx.params;
   const body = (await req.json().catch(() => null)) as {
     action?: string;
@@ -18,17 +21,17 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   if (body?.action === "favorite") {
     const liked = Boolean(body.liked);
     const pref = await prisma.recipePreference.upsert({
-      where: { recipeId: id },
+      where: { recipeId_familyId: { recipeId: id, familyId: fam.ctx.familyId } },
       update: { liked },
-      create: { recipeId: id, liked },
+      create: { recipeId: id, familyId: fam.ctx.familyId, liked },
     });
     return xzdJson({ code: 0, liked: pref.liked });
   }
   if (body?.action === "cooked") {
     const pref = await prisma.recipePreference.upsert({
-      where: { recipeId: id },
+      where: { recipeId_familyId: { recipeId: id, familyId: fam.ctx.familyId } },
       update: { timesCooked: { increment: 1 }, lastCookedAt: new Date() },
-      create: { recipeId: id, timesCooked: 1, lastCookedAt: new Date() },
+      create: { recipeId: id, familyId: fam.ctx.familyId, timesCooked: 1, lastCookedAt: new Date() },
     });
     return xzdJson({ code: 0, timesCooked: pref.timesCooked });
   }
