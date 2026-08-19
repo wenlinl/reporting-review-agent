@@ -1033,7 +1033,10 @@ function renderHome(){
     document.getElementById("todayDish").textContent = r0.name;
     document.getElementById("todayTime").textContent = `⏱ ${r0.time}${AI_REC && AI_REC.name === r0.name ? " · AI 精选" : ""}`;
     const link = document.querySelector(".half.olive .f-link");
-    if (link) link.dataset.view = AI_REC && AI_REC.reason ? `recipe:0:${AI_REC.reason}` : "recipe:0";
+    if (link){
+      const reason = AI_REC && AI_REC.reason && !AI_REC.reason.includes(":") ? AI_REC.reason.slice(0, 60) : "";
+      link.dataset.view = reason ? `recipe:0:${reason}` : "recipe:0";
+    }
   } else {
     document.getElementById("todayDish").textContent = "暂无推荐";
     document.getElementById("todayTime").textContent = "登录后按库存生成";
@@ -1153,7 +1156,7 @@ function renderRecipe(){
       <div class="tc-meta">⏱ ${t.time}<span class="tc-pill">${t.tag}</span></div>
       <div class="tc-desc">${t.desc}</div>
       <div class="tc-sub">${t.nutr}</div>
-      <button class="green-btn" data-stop data-view="recipe:0">查看菜谱 ›</button>
+      <button class="green-btn" data-view="recipe:0">查看菜谱 ›</button>
     </div>
     <div class="tc-right">
       <div class="food-img">${t.emoji}</div>
@@ -1576,6 +1579,8 @@ function viewItem(name){
 
 function viewRecipe(idx, banner){
   const r = RECIPES[idx];
+  if (!r) return `<div class="sv-card"><div class="sv-sec">菜谱详情</div>
+    <div class="empty-box">菜谱还没加载出来<br><span style="font-size:11px">请确认已创建/加入家庭，稍后再试</span></div></div>`;
   const fav = FAVS.has(r.name);
   const have = r.ing.filter(i => i[2] === "有").length;
   return `
@@ -2172,6 +2177,8 @@ document.addEventListener("click", e => {
   if (g){ e.preventDefault(); go(g.dataset.goto); return; }
   const v = e.target.closest("[data-view]");
   if (v){ e.preventDefault(); handleView(v.dataset.view); return; }
+  const b = e.target.closest("[data-act]");
+  if (b){ e.preventDefault(); act(b.dataset.act, b); return; }
   const heart = e.target.closest(".rec-heart, .heart-btn");
   if (heart && !heart.dataset.stop){
     const n = heart.dataset.name;
@@ -2183,12 +2190,6 @@ document.addEventListener("click", e => {
   }
 });
 document.getElementById("svBack").addEventListener("click", closeView);
-document.getElementById("svRight").addEventListener("click", e => {
-  const b = e.target.closest("[data-act]"); if (b) act(b.dataset.act, b);
-});
-document.getElementById("svBody").addEventListener("click", e => {
-  const b = e.target.closest("[data-act]"); if (b) act(b.dataset.act, b);
-});
 
 /* ================= 库存：搜索 / 排序 ================= */
 const sortLabels = { days:"按剩余天数", cat:"按品类", time:"按录入时间" };
