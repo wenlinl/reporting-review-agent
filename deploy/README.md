@@ -1,5 +1,19 @@
 # 部署指南
 
+## 0. 当前生产环境（2026-08-20）
+
+| 项 | 值 |
+|---|---|
+| 域名 | `shike.live`（HTTPS，nginx + Certbot） |
+| 服务器目录 | `/opt/shike` |
+| Docker 容器 | `shike-app-1`（compose 项目名 `shike`） |
+| 数据卷 | `shike_app-data`（SQLite + 上传文件） |
+| CI/CD | GitHub Actions 推送 main 自动部署（Secrets：`SHIKE_SSH_HOST/PORT/USER/KEY/DEPLOY_DIR`，`DEPLOY_DIR=/opt/shike`） |
+| 备份 | `bash scripts/backup.sh`（crontab 每日 03:00，保留 14 份，目录 `/root/shike-backups`） |
+| 数据库变更 | 部署后在容器内执行 `docker exec shike-app-1 npx prisma db push`（变更前先 `docker cp` 备份 `app.db`） |
+
+生产环境已按下面第 1–6 节配置完成；新服务器可照此流程从零搭建。
+
 ## 1. 准备服务器
 
 - 建议：境外 VPS，2 核 4G 起（推荐 4 核 8G），磁盘 100G，Ubuntu 22.04
