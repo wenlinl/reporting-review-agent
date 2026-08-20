@@ -1,6 +1,6 @@
 FROM node:22-slim AS base
 
-# 安装 ffmpeg（音频转码，可选但推荐）与系统依赖
+# 安装系统依赖（ffmpeg 保留兼容，当前未使用）
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg openssl ca-certificates \
     && rm -rf /var/lib/apt/lists/*

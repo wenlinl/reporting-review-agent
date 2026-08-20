@@ -39,15 +39,15 @@ if [[ ! -f .env ]]; then
   echo "已生成 .env —— 请先编辑填写以下两项后再重新运行本脚本："
   echo "  nano .env"
   echo "  ARK_API_KEY=你的方舟 API Key"
-  echo "  VOLC_SPEECH_API_KEY=你的语音 API Key"
+  echo "  ARK_VISION_API_KEY=你的视觉 API Key（扫描识别用）"
   exit 1
 fi
 
 if grep -qE '^ARK_API_KEY=$' .env; then
-  echo "警告: .env 中 ARK_API_KEY 为空，AI 评审/反馈将不可用"
+  echo "警告: .env 中 ARK_API_KEY 为空，AI 推荐/助手/营养将不可用"
 fi
-if grep -qE '^VOLC_SPEECH_API_KEY=$' .env; then
-  echo "警告: .env 中 VOLC_SPEECH_API_KEY 为空，录音转写将不可用"
+if grep -qE '^ARK_VISION_API_KEY=$' .env; then
+  echo "警告: .env 中 ARK_VISION_API_KEY 为空，扫描识别将不可用"
 fi
 if grep -qE '^AUTH_SECRET=please-change-me$' .env || grep -qE '^AUTH_SECRET=$' .env; then
   echo "警告: .env 中 AUTH_SECRET 仍是默认值，建议改为随机字符串（执行: openssl rand -hex 32）"

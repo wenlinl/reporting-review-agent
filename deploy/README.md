@@ -50,7 +50,7 @@ certbot --nginx -d your-domain.com
 
 ```bash
 cp .env.example .env
-# 编辑 .env：AUTH_SECRET / ARK_API_KEY / VOLC_SPEECH_API_KEY / SEED_ADMIN_*
+# 编辑 .env：AUTH_SECRET / ARK_API_KEY / ARK_VISION_API_KEY / ARK_VISION_MODEL / SEED_ADMIN_*
 docker compose up -d --build
 docker compose exec app sh -c "mkdir -p data && touch data/app.db && npx prisma db push && npx tsx prisma/seed.ts"
 ```
@@ -58,7 +58,7 @@ docker compose exec app sh -c "mkdir -p data && touch data/app.db && npx prisma 
 ## 4. 使用
 
 - 浏览器访问 `https://your-domain.com`
-- 管理员登录后创建同事账号，每人获得"姓名 + 邮箱 + 初始密码"
+- 注册 / 登录后先创建家庭（或输邀请码加入），即可使用全部功能；种子管理员账号见 `.env` 的 `SEED_ADMIN_*`
 
 ## 5. 备份
 
@@ -75,12 +75,9 @@ docker run --rm -v shike_app-data:/data -v $PWD:/backup alpine tar czf /backup/b
 | --- | --- |
 | `AUTH_SECRET` | 会话签名密钥，`openssl rand -hex 32` 生成 |
 | `ARK_API_KEY` | 火山方舟 API Key（豆包大模型） |
-| `VOLC_SPEECH_API_KEY` | 火山语音服务 API Key（ASR 转写） |
-| `VOLC_ASR_MODE` | `flash`（极速版，推荐）/ `standard`（标准版） |
+| `ARK_VISION_API_KEY` | 火山方舟视觉 API Key（扫描识别，优先于 `ARK_API_KEY`） |
+| `ARK_VISION_MODEL` | 视觉模型 ID（`doubao-seed-2-1-turbo-260628`） |
 
 ## 6. 食刻接口（后端已并入本工程）
 
-- 新增路由：`/api/scan`（硬件上传+AI识别+入库）、`/api/items`、`/api/items/[id]`（改容器）、`/api/reminders`；
-- 数据库新增模型：`FoodItem`、`ScanLog`（`prisma db push` 自动建表）；
-- 部署 .env 需新增：`ARK_VISION_MODEL=doubao-seed-2-1-turbo-260628`、`ARK_VISION_API_KEY=<支持视觉的方舟 Key>`；
-- 详细契约见工程根目录 `后端对接说明.md`（位于 HsHH 工作区）。
+- 完整接口清单与契约见 `docs/后端对接说明.md`（账号 / 家庭 / 扫描 / 库存 / 提醒 / 菜谱 / AI 助手等）。
