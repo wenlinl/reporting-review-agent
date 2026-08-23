@@ -55,6 +55,8 @@ model Device {
   firmwareVersion String?
   memberId        String?
   lastSeenAt      DateTime?
+  pendingAction   String? // 平板下发的"当前动作"：in | out（持久化直到下次修改）
+  pendingActionAt DateTime?
   createdAt       DateTime  @default(now())
 }
 
@@ -268,4 +270,37 @@ model RecipePreference {
   updatedAt    DateTime  @updatedAt
 
   @@unique([recipeId, familyId])
+}
+
+// ==================== 关门结算汇总 ====================
+
+model SummaryBatch {
+  id           String        @id @default(cuid())
+  deviceId     String
+  familyId     String?
+  inCount      Int           @default(0)
+  outCount     Int           @default(0)
+  midOutCount  Int           @default(0)
+  unknownCount Int           @default(0)
+  status       String        @default("pending") // pending | confirmed
+  createdAt    DateTime      @default(now())
+  confirmedAt  DateTime?
+  items        SummaryItem[]
+
+  @@index([deviceId, createdAt])
+  @@index([status])
+}
+
+model SummaryItem {
+  id        String   @id @default(cuid())
+  batchId   String
+  kind      String // in | out | midout | unknown
+  name      String?
+  status    String   @default("pending") // pending | confirmed | ignored
+  note      String?
+  createdAt DateTime @default(now())
+
+  batch SummaryBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@index([batchId])
 }
