@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { xzdJson, xzdOptions } from "@/lib/http";
 import { verifyDevice } from "@/lib/deviceAuth";
+import { settleWindows } from "@/lib/windowSettle";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,6 +22,9 @@ export async function GET(req: NextRequest) {
   if (!auth.ok) {
     return xzdJson({ code: 401, msg: "设备鉴权失败" }, 401);
   }
+
+  // 惰性结算：把已闭合的扫码窗口生成待确认批次（ADR-005 延迟确认）
+  await settleWindows(deviceId);
 
   const batch = await prisma.summaryBatch.findFirst({
     where: { deviceId, status: "pending" },

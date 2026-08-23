@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { parseFoodPhoto } from "@/lib/xzdVision";
 import { xzdJson, xzdOptions } from "@/lib/http";
 import { verifyDevice } from "@/lib/deviceAuth";
+import { settleWindows } from "@/lib/windowSettle";
 import { rateLimit } from "@/lib/rateLimit";
 import { getSession } from "@/lib/auth";
 import { requireFamilyCtx } from "@/lib/familyCtx";
@@ -88,7 +89,10 @@ export async function POST(req: NextRequest) {
   if (requestId) {
     const dup = await prisma.scanLog.findUnique({ where: { requestId } });
     if (dup) {
-      const stockTotal = await prisma.foodItem.count({ where: { deviceId } });
+      // 关门结算：窗口已闭合则自动生成待确认批次（不阻塞扫码响应）
+  await settleWindows(deviceId);
+
+  const stockTotal = await prisma.foodItem.count({ where: { deviceId } });
       return xzdJson({
         code: 0,
         name: dup.name === "未识别" ? "" : dup.name,

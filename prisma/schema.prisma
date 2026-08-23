@@ -154,10 +154,12 @@ model ScanLog {
   confidence   Float
   note         String?
   imagePath    String?
+  batchId      String? // 归属的关门结算批次（SummaryBatch.id）
   createdAt    DateTime @default(now())
 
   @@index([scannedAt])
   @@index([container])
+  @@index([batchId])
 }
 
 model FoodTrace {
