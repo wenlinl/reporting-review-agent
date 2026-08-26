@@ -10,7 +10,7 @@
 | 数据卷 | `shike_app-data`（SQLite + 上传文件） |
 | CI/CD | GitHub Actions 推送 main 自动部署（Secrets：`SHIKE_SSH_HOST/PORT/USER/KEY/DEPLOY_DIR`，`DEPLOY_DIR=/opt/shike`） |
 | 备份 | `bash scripts/backup.sh`（crontab 每日 03:00，保留 14 份，目录 `/root/shike-backups`） |
-| 数据库变更 | 部署后在容器内执行 `docker exec shike-app-1 npx prisma db push`（变更前先 `docker cp` 备份 `app.db`） |
+| 数据库变更 | 部署流程自动执行（先备份 `app.db.bak-<时间戳>` 再 `npx prisma db push`，幂等无变更时为空操作）；如需手动执行：`docker exec shike-app-1 npx prisma db push` |
 
 生产环境已按下面第 1–6 节配置完成；新服务器可照此流程从零搭建。
 

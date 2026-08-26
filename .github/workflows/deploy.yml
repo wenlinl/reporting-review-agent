@@ -77,3 +77,17 @@ jobs:
                 -o IdentitiesOnly=yes \
                 "$SSH_USER@$SSH_HOST" \
                 "mkdir -p $DEPLOY_DIR && tar xzf - -C $DEPLOY_DIR && cd $DEPLOY_DIR && docker compose up -d --build"
+
+      - name: 数据库 schema 同步（自动备份后 prisma db push）
+        env:
+          SSH_HOST: ${{ secrets.SHIKE_SSH_HOST }}
+          SSH_PORT: ${{ secrets.SHIKE_SSH_PORT }}
+          SSH_USER: ${{ secrets.SHIKE_SSH_USER }}
+          SSH_KEY: ${{ secrets.SHIKE_SSH_KEY }}
+        run: |
+          # 先备份生产库，再应用 schema 变更；无变更时为空操作（幂等）
+          ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=accept-new \
+            -o IdentitiesOnly=yes \
+            "$SSH_USER@$SSH_HOST" \
+            "docker exec shike-app-1 sh -c 'cp /app/data/app.db /app/data/app.db.bak-\$(date +%Y%m%d-%H%M%S) 2>/dev/null; cd /app && npx prisma db push --skip-generate'"
