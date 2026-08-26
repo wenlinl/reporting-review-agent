@@ -762,7 +762,7 @@ main{position:absolute;top:calc(env(safe-area-inset-top) + 104px);bottom:calc(en
         </div>
         <div class="col">
           <div class="s-icn s-green">👨‍👩‍👧</div>
-          <div class="n n-green">4</div>
+          <div class="n n-green" id="invMembers">—</div>
           <div class="l1">位成员</div>
           <div class="l2">已同步更新</div>
         </div>
@@ -778,15 +778,10 @@ main{position:absolute;top:calc(env(safe-area-inset-top) + 104px);bottom:calc(en
       </div>
       <div id="invList"></div>
 
-      <button class="soon-banner" data-view="remind">
+      <button class="soon-banner" id="soonBanner" data-view="remind" style="display:none">
         <div class="b-ic">📅</div>
-        <div class="b-t"><b>3 种食材即将过期</b><span>查看详情，合理安排菜谱</span></div>
-        <div class="b-thumbs">
-          <span class="b-thumb">🥦</span>
-          <span class="b-thumb">🥩</span>
-          <span class="b-thumb">🍅</span>
-          <span class="b-arrow">›</span>
-        </div>
+        <div class="b-t"><b id="soonBannerText">0 种食材即将过期</b><span>查看详情，合理安排菜谱</span></div>
+        <div class="b-thumbs" id="soonBannerThumbs"></div>
       </button>
     </section>
 
@@ -808,12 +803,7 @@ main{position:absolute;top:calc(env(safe-area-inset-top) + 104px);bottom:calc(en
 
       <div class="cream-panel">
         <div class="panel-head"><b>当前可用食材</b><a data-goto="inv">查看全部 ›</a></div>
-        <div class="food-chips">
-          <span class="fchip">🥦 西兰花</span>
-          <span class="fchip">🥚 鸡蛋</span>
-          <span class="fchip">🥩 牛肉</span>
-          <span class="fchip">🥛 牛奶</span>
-        </div>
+        <div class="food-chips" id="foodChips"></div>
       </div>
 
       <div class="today-card" id="todayCard"></div>
@@ -978,19 +968,33 @@ let NUTR_SRV = null;
 
 /* ================= 工具 ================= */
 function daysLeft(exp){
+  if (!exp) return NaN;
   const a = new Date(exp), b = new Date(NOW);
+  if (isNaN(a.getTime())) return NaN;
   a.setHours(0,0,0,0); b.setHours(0,0,0,0);
   return Math.round((a - b) / 86400000);
 }
-function stateOf(it){
+// 有效剩余天数；无到期日期时返回 null（此时用 AI 推荐保鲜天数 keepDays）
+function effDays(it){
   const d = daysLeft(it.exp);
+  return Number.isFinite(d) ? d : null;
+}
+function dayText(it){
+  const d = effDays(it);
+  if (d !== null) return d < 0 ? `已过期 ${-d} 天` : d === 0 ? "今天到期" : `剩余 ${d} 天`;
+  return it.keepDays ? `建议保鲜 ${it.keepDays} 天` : "—";
+}
+function stateOf(it){
+  const d = effDays(it);
+  if (d === null) return ["保鲜中","d-green","st-green"];
   if (d < 0) return ["已过期","d-red","st-red"];
   if (d <= 2) return d === 1 ? ["今天到期","d-red","st-red"] : ["即将过期","d-red","st-red"];
   if (d <= 7) return [it.label || "尽快食用","d-amber","st-amber"];
   return ["新鲜","d-green","st-green"];
 }
 function barPct(it){
-  const d = daysLeft(it.exp);
+  const d = effDays(it);
+  if (d === null) return 70;
   return Math.max(12, Math.min(100, 100 - (d - 1) * 7));
 }
 function barColor(dcls){
@@ -1106,14 +1110,15 @@ function renderInv(){
   else if (sortMode === "cat") list = [...list].sort((a,b) => a.cat.localeCompare(b.cat));
   document.getElementById("invTotal").textContent = INV.length;
   document.getElementById("invSoon").textContent = INV.filter(i => daysLeft(i.exp) <= 2 && !HANDLED.has(i.name)).length;
+  const invMem = document.getElementById("invMembers");
+  if (invMem) invMem.textContent = SRV_MEMBERS.length;
   document.getElementById("invList").innerHTML = list.length ? list.map(it => {
-    const d = daysLeft(it.exp);
     const [label, dcls, stcls] = stateOf(it);
     return `<div class="inv-item" data-view="item:${it.name}">
       <div class="inv-thumb">${it.emoji}</div>
       <div class="inv-body">
         <div class="inv-r1"><b>${it.name}</b><span class="inv-cat">${it.cat}</span></div>
-        <div class="inv-r2"><span class="inv-days ${dcls}">${d < 0 ? `已过期 ${-d} 天` : `剩余 ${d} 天`}</span><span class="inv-st ${stcls}">${label}</span></div>
+        <div class="inv-r2"><span class="inv-days ${dcls}">${dayText(it)}</span><span class="inv-st ${stcls}">${label}</span></div>
         <div class="inv-bar"><i style="width:${barPct(it)}%;background:${barColor(dcls)}"></i></div>
         <div class="inv-r3">${it.storage} · 点击查看详情</div>
       </div>
@@ -1124,6 +1129,33 @@ function renderInv(){
       </div>
     </div>`;
   }).join("") : `<div class="empty-box">没有找到相关食材<br><span style="font-size:11px">换个关键词试试</span></div>`;
+  updateSoonBanner();
+  renderFoodChips();
+}
+function updateSoonBanner(){
+  const el = document.getElementById("soonBanner");
+  if (!el) return;
+  const soon = INV.filter(i => {
+    const d = effDays(i);
+    return d !== null && d <= 2 && !HANDLED.has(i.name);
+  });
+  el.style.display = soon.length ? "" : "none";
+  document.getElementById("soonBannerText").textContent = `${soon.length} 种食材即将过期`;
+  document.getElementById("soonBannerThumbs").innerHTML =
+    soon.slice(0, 3).map(i => `<span class="b-thumb">${i.emoji || "🥫"}</span>`).join("") + `<span class="b-arrow">›</span>`;
+}
+function renderFoodChips(){
+  const el = document.getElementById("foodChips");
+  if (!el) return;
+  const seen = new Set();
+  const chips = INV.filter(i => {
+    if (seen.has(i.name)) return false;
+    seen.add(i.name);
+    return true;
+  }).slice(0, 8);
+  el.innerHTML = chips.length
+    ? chips.map(i => `<span class="fchip">${i.emoji || "🥫"} ${i.name}</span>`).join("")
+    : `<span class="fchip">暂无库存食材</span>`;
 }
 
 /* ================= 渲染：菜谱 ================= */
@@ -1919,6 +1951,8 @@ async function loadMembers(){
     if (res.status === 401){ SRV_MEMBERS = []; renderProfile(); return; }
     const j = await res.json();
     SRV_MEMBERS = (j && j.code === 0 && Array.isArray(j.members)) ? j.members : [];
+    const invMem = document.getElementById("invMembers");
+    if (invMem) invMem.textContent = SRV_MEMBERS.length;
     renderProfile();
     const view = document.getElementById("svBody");
     if (view && currentView && currentView.name === "members") refreshView();
@@ -2174,6 +2208,23 @@ function handleView(spec){
 }
 document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => go(tab.dataset.page)));
 document.addEventListener("click", e => {
+  const heart = e.target.closest(".rec-heart, .heart-btn");
+  if (heart){
+    const n = heart.dataset.name;
+    FAVS.has(n) ? FAVS.delete(n) : FAVS.add(n);
+    const r = RECIPES.find(x => x.name === n);
+    if (r && r.id){
+      fetch(`${API_BASE}/api/recipes/${r.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "favorite", liked: FAVS.has(n) }),
+      }).catch(() => {});
+    }
+    heart.classList.toggle("on", FAVS.has(n));
+    heart.innerHTML = FAVS.has(n) ? "♥" : "♡";
+    toast(FAVS.has(n) ? "已加入收藏" : "已取消收藏");
+    return;
+  }
   const stop = e.target.closest("[data-stop]");
   if (stop) return;
   const g = e.target.closest("[data-goto]");
@@ -2182,15 +2233,6 @@ document.addEventListener("click", e => {
   if (v){ e.preventDefault(); handleView(v.dataset.view); return; }
   const b = e.target.closest("[data-act]");
   if (b){ e.preventDefault(); act(b.dataset.act, b); return; }
-  const heart = e.target.closest(".rec-heart, .heart-btn");
-  if (heart && !heart.dataset.stop){
-    const n = heart.dataset.name;
-    FAVS.has(n) ? FAVS.delete(n) : FAVS.add(n);
-    heart.classList.toggle("on", FAVS.has(n));
-    heart.innerHTML = FAVS.has(n) ? "♥" : "♡";
-    toast(FAVS.has(n) ? "已加入收藏" : "已取消收藏");
-    return;
-  }
 });
 document.getElementById("svBack").addEventListener("click", closeView);
 
@@ -2271,7 +2313,7 @@ function showScanGate(reason){
 function showResult(r){
   lastResult = r;
   lastResult._fromServer = !!r._fromServer;
-  const keepDays = (r.daysLeft && r.daysLeft > 0) ? r.daysLeft : 3;
+  const keepDays = r.keepDays || ((r.daysLeft && r.daysLeft > 0) ? r.daysLeft : 3);
   lastResult._keepDays = keepDays;
   scanResult.classList.remove("hide", "low");
   document.getElementById("resThumb").textContent = r.emoji || "🥦";
@@ -2298,6 +2340,7 @@ async function fetchShelfLife(name){
     if (seq !== scanSeq || !lastResult || lastResult.name !== name) return;
     if (j && j.code === 0 && j.daysLeft > 0){
       lastResult._keepDays = j.daysLeft;
+      lastResult.keepDays = j.daysLeft;
       document.getElementById("resKeep").innerHTML = `建议保鲜 <i>${j.daysLeft}</i> 天`;
       const conf = document.getElementById("resConf");
       conf.textContent = conf.textContent.split(" · 保质期 AI 实时生成")[0] + " · 保质期 AI 实时生成";
@@ -2391,7 +2434,7 @@ async function recognize(){
       const emojiMap = { "西兰花":"🥦", "牛奶":"🥛", "光明鲜牛奶":"🥛", "鸡蛋":"🥚", "牛肉":"🥩", "番茄":"🍅", "苹果":"🍎", "面包":"🍞", "黄瓜":"🥒", "生菜":"🥬" };
       showResult({ name:j.name, daysLeft:j.daysLeft || 3, confidence:j.confidence,
         suggestedContainer:j.suggestedContainer, category:j.category || "", expiryDate:j.expiryDate || "",
-        note:j.note || "", emoji: emojiMap[j.name] || "🥫", _fromServer:true });
+        keepDays:j.keepDays || null, note:j.note || "", emoji: emojiMap[j.name] || "🥫", _fromServer:true });
       setCamStatus("识别成功", "live");
     } else {
       showLowConf();
@@ -2454,6 +2497,7 @@ confirmBtn.addEventListener("click", async () => {
     fd.append("category", r.category || "");
     fd.append("confidence", String(r.confidence || 0));
     fd.append("expiryDate", r.expiryDate || "");
+    fd.append("keepDays", r.keepDays ? String(r.keepDays) : "");
     fd.append("suggestedContainer", r.suggestedContainer || "冰箱");
     fd.append("note", r.note || "");
     try {
@@ -2719,10 +2763,11 @@ async function loadServerData(){
       name: it.name,
       cat: it.category || "其他",
       emoji: it.emoji || "🥫",
-      by: it.recordedBy || "妈妈",
-      av: it.recordedByAvatar || "👩",
+      by: it.recordedBy || "—",
+      av: it.recordedByAvatar || "👤",
       when: xzdWhen(it.scannedAt),
-      exp: it.expiryDate || "2099-01-01",
+      exp: it.expiryDate || "",
+      keepDays: (it.keepDays && it.keepDays > 0) ? it.keepDays : null,
       storage: it.storage || "保鲜中",
       qty: it.quantity ?? 1,
       label: it.label || "",

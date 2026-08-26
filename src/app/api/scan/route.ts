@@ -48,11 +48,16 @@ function parseExpiry(s: string | null): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
+function normKeepDays(v: unknown): number | null {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+}
+
 /**
  * 硬件上传入口（T5-E1 固件调用）。契约：multipart，字段 image/deviceId/action/container/timestamp/requestId；
  * 返回扁平 JSON：code/name/scannedAt/expiryDate/daysLeft/suggestedContainer/confidence/note/keepDays/stockTotal。
  * 鉴权：X-Device-Token 请求头（与 Device.tokenHash 比对）；限流 + requestId 幂等。
- * H5 手机扫描走登录会话：preview=1 仅识别不入库；确认录入时前端回传 name/category/confidence/expiryDate/suggestedContainer/note 直接记账，不再重复调视觉 AI。
+ * H5 手机扫描走登录会话：preview=1 仅识别不入库；确认录入时前端回传 name/category/confidence/expiryDate/keepDays/suggestedContainer/note 直接记账，不再重复调视觉 AI。
  */
 export async function POST(req: NextRequest) {
   let parsed: Awaited<ReturnType<typeof parseMultipart>>;
@@ -129,6 +134,7 @@ export async function POST(req: NextRequest) {
         ? f.suggestedContainer!
         : container,
       confidence: Math.max(0, Math.min(1, Number(f.confidence) || 0)),
+      keepDays: normKeepDays(f.keepDays),
       note: (f.note || "").slice(0, 96),
     };
   } else {
@@ -165,7 +171,7 @@ export async function POST(req: NextRequest) {
       category,
       suggestedContainer,
       confidence: Number(confidence.toFixed(2)),
-      keepDays: recognized && daysLeft >= 0 ? daysLeft : null,
+      keepDays: recognized ? (item.keepDays ?? (daysLeft >= 0 ? daysLeft : null)) : null,
       note,
       preview: true,
     });
@@ -203,12 +209,14 @@ export async function POST(req: NextRequest) {
         category,
         suggestedContainer,
         source: "ai",
-        keepDays: daysLeft >= 0 ? daysLeft : null,
-        defaultExpiryDays: daysLeft >= 0 ? daysLeft : null,
+        keepDays: item.keepDays ?? (daysLeft >= 0 ? daysLeft : null),
+        defaultExpiryDays: item.keepDays ?? (daysLeft >= 0 ? daysLeft : null),
       },
     });
   }
-  const keepDays = recognized ? (catalog?.keepDays ?? (daysLeft >= 0 ? daysLeft : null)) : null;
+  const keepDays = recognized
+    ? (catalog?.keepDays ?? item.keepDays ?? (daysLeft >= 0 ? daysLeft : null))
+    : null;
   const emoji = recognized ? catalog?.emoji || null : null;
   const storage = STORAGE_MAP[suggestedContainer] || null;
 

@@ -7,12 +7,13 @@ export type XzdScanItem = {
   expiryDate: string | null;
   suggestedContainer: string;
   confidence: number;
+  keepDays: number | null;
   note: string;
 };
 
 const SYSTEM_PROMPT = `你是“食刻”食品识别助手。根据照片识别食品，只输出 JSON：
-{"name":"不超过10字中文品名","category":"乳制品|肉类|蔬菜|水果|饮料|零食|调味品|药品|主食|其他","expiryDate":"YYYY-MM-DD 或空","suggestedContainer":"冰箱|零食柜|药盒|调料柜|主食柜","confidence":0.0~1.0,"note":"看不清时的一句话"}
-规则：优先读包装日期；读不到按常识估计；看不清不要猜名字，confidence 给低分（<0.5）。`;
+{"name":"不超过10字中文品名","category":"乳制品|肉类|蔬菜|水果|饮料|零食|调味品|药品|主食|其他","expiryDate":"YYYY-MM-DD 或空","suggestedContainer":"冰箱|零食柜|药盒|调料柜|主食柜","confidence":0.0~1.0,"keepDays":建议保鲜天数(整数,可为null),"note":"看不清时的一句话"}
+规则：优先读包装日期并填 expiryDate；读不到日期时按常识给 keepDays（如鲜奶5、苹果7、包装饮用水30），有日期时 keepDays 可为 null；看不清不要猜名字，confidence 给低分（<0.5）。`;
 
 export async function parseFoodPhoto(imageBase64: string): Promise<XzdScanItem> {
   const base = process.env.ARK_BASE_URL || "https://ark.cn-beijing.volces.com/api/v3";
@@ -66,6 +67,10 @@ export async function parseFoodPhoto(imageBase64: string): Promise<XzdScanItem> 
     expiryDate: String(raw.expiryDate ?? "").trim() || null,
     suggestedContainer: String(raw.suggestedContainer ?? "").trim(),
     confidence: Number(raw.confidence ?? 0),
+    keepDays:
+      Number.isFinite(Number(raw.keepDays)) && Number(raw.keepDays) > 0
+        ? Math.round(Number(raw.keepDays))
+        : null,
     note: String(raw.note ?? "").trim(),
   };
 }
