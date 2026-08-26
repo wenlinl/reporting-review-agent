@@ -1082,10 +1082,17 @@ function renderProfile(){
 
 function skAnimateCount(el, target){
   if(!el) return;
+  // 值未变化时不重播动画，避免 5 秒轮询/多次重渲染导致数字反复闪烁
+  if (el._last === target){
+    if (el.textContent !== String(target)) el.textContent = target;
+    return;
+  }
+  el._last = target;
+  const from = Number(el.textContent) || 0;
   const dur = 700, t0 = performance.now();
   (function tick(now){
     const t = Math.min(1,(now - t0)/dur), e = 1 - Math.pow(1-t,3);
-    el.textContent = Math.round(target*e);
+    el.textContent = Math.round(from + (target - from) * e);
     if(t<1) requestAnimationFrame(tick);
   })(t0);
 }
