@@ -52,6 +52,7 @@ function parseExpiry(s: string | null): Date | null {
  * 硬件上传入口（T5-E1 固件调用）。契约：multipart，字段 image/deviceId/action/container/timestamp/requestId；
  * 返回扁平 JSON：code/name/scannedAt/expiryDate/daysLeft/suggestedContainer/confidence/note/keepDays/stockTotal。
  * 鉴权：X-Device-Token 请求头（与 Device.tokenHash 比对）；限流 + requestId 幂等。
+ * H5 手机扫描走登录会话：preview=1 仅识别不入库；确认录入时前端回传 name/category/confidence/expiryDate/suggestedContainer/note 直接记账，不再重复调视觉 AI。
  */
 export async function POST(req: NextRequest) {
   let parsed: Awaited<ReturnType<typeof parseMultipart>>;
@@ -71,6 +72,8 @@ export async function POST(req: NextRequest) {
   const container = CONTAINERS.includes(f.container ?? "") ? f.container! : "冰箱";
   const deviceId = (f.deviceId || "xzd-t5e1-001").slice(0, 64);
   const requestId = (f.requestId || "").slice(0, 80);
+  const preview = f.preview === "1" || f.preview === "true";
+  const clientName = (f.name || "").trim().slice(0, 20);
 
   // 鉴权：固件走 X-Device-Token，H5 手机扫描走登录会话
   const session = await getSession();
@@ -86,7 +89,7 @@ export async function POST(req: NextRequest) {
   }
 
   // 幂等：固件网络重试时按 requestId 去重，直接返回上一次结果
-  if (requestId) {
+  if (requestId && !preview) {
     const dup = await prisma.scanLog.findUnique({ where: { requestId } });
     if (dup) {
       // 关门结算：窗口已闭合则自动生成待确认批次（不阻塞扫码响应）
@@ -115,13 +118,25 @@ export async function POST(req: NextRequest) {
     if (!isNaN(d.getTime())) scannedAt = d;
   }
 
-  const imagePath = saveUpload("xzd", image.filename || "scan.jpg", image.buffer);
-
   let item;
-  try {
-    item = await parseFoodPhoto(image.buffer.toString("base64"));
-  } catch (e) {
-    return xzdJson({ code: 2, msg: e instanceof Error ? e.message : "AI 调用失败" });
+  if (!preview && clientName) {
+    // H5 确认录入：直接采用预览识别结果记账，避免重复调用视觉 AI 导致结果不一致
+    item = {
+      name: clientName,
+      category: (f.category || "其他").slice(0, 16),
+      expiryDate: (f.expiryDate || "").trim() || null,
+      suggestedContainer: CONTAINERS.includes(f.suggestedContainer ?? "")
+        ? f.suggestedContainer!
+        : container,
+      confidence: Math.max(0, Math.min(1, Number(f.confidence) || 0)),
+      note: (f.note || "").slice(0, 96),
+    };
+  } else {
+    try {
+      item = await parseFoodPhoto(image.buffer.toString("base64"));
+    } catch (e) {
+      return xzdJson({ code: 2, msg: e instanceof Error ? e.message : "AI 调用失败" });
+    }
   }
 
   const name = item.name;
@@ -138,6 +153,25 @@ export async function POST(req: NextRequest) {
     ? item.suggestedContainer
     : container;
   const note = item.note.slice(0, 96);
+
+  // H5 预览识别：只返回识别结果，不写库存/流水/文件；确认录入时前端再提交一次
+  if (preview) {
+    return xzdJson({
+      code: 0,
+      name: recognized ? name : "",
+      scannedAt: fmtUtc(scannedAt),
+      expiryDate: expiryDate ? fmtDate(expiryDate) : "",
+      daysLeft,
+      category,
+      suggestedContainer,
+      confidence: Number(confidence.toFixed(2)),
+      keepDays: recognized && daysLeft >= 0 ? daysLeft : null,
+      note,
+      preview: true,
+    });
+  }
+
+  const imagePath = saveUpload("xzd", image.filename || "scan.jpg", image.buffer);
 
   // 设备（固件路径 verifyDevice 已刷新 lastSeenAt；H5 路径按需补建）
   let device = devAuth.ok ? devAuth.device! : null;

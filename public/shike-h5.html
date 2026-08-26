@@ -2229,9 +2229,11 @@ document.getElementById("bellBtn").addEventListener("click", () => openView("not
 /* ================= 扫描：摄像头 + 识别 ================= */
 const SCAN_URL = "https://shike.live/api/scan";
 const API_BASE = SCAN_URL.replace(/\/api\/scan$/, "");
-const DEVICE_ID = "h5-demo-001";
+// 每次访问会话独立的设备标识：避免所有 H5 用户共用同一设备名，导致库存/限流互相干扰
+const DEVICE_ID = "h5-" + (crypto.randomUUID ? crypto.randomUUID().replace(/-/g, "").slice(0, 12) : Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
 let stream = null, camMode = "demo", camLive = false;
 let scanLoopOn = false, busy = false, torchOn = false, lastResult = null, useDemo = false, scanSeq = 0;
+let awaitingConfirm = false, lastShot = null;
 
 const vf = document.getElementById("viewfinder");
 const camVideo = document.getElementById("camVideo");
@@ -2244,8 +2246,31 @@ function setCamStatus(text, mode){
   camStatusText.textContent = text;
   camStatus.className = "cam-status " + mode;
 }
+function scanBlockReason(){
+  if (!AUTH.user) return "login";
+  if (!SRV_FAMILY || !SRV_FAMILY.family) return "family";
+  return null;
+}
+function showScanGate(reason){
+  pauseAutoScan();
+  if (reason === "login"){
+    setCamStatus("请先登录，登录后即可真实识别", "err");
+    const gate = document.getElementById("familyGate");
+    if (gate) gate.style.display = "none";
+    authScreen.classList.remove("hidden");
+    switchAuthTab("login");
+    toast("登录后启用真实识别");
+  } else {
+    setCamStatus("请先创建或加入家庭，再开始识别", "err");
+    renderFamilyGate();
+    const gate = document.getElementById("familyGate");
+    if (gate) gate.style.display = "flex";
+    toast("创建或加入家庭后启用真实识别");
+  }
+}
 function showResult(r){
   lastResult = r;
+  lastResult._fromServer = !!r._fromServer;
   const keepDays = (r.daysLeft && r.daysLeft > 0) ? r.daysLeft : 3;
   lastResult._keepDays = keepDays;
   scanResult.classList.remove("hide", "low");
@@ -2256,6 +2281,8 @@ function showResult(r){
   document.getElementById("resConf").textContent =
     `置信度 ${Math.round(r.confidence * 100)}% · 建议放入${r.suggestedContainer || "冰箱"}`;
   confirmBtn.disabled = false;
+  awaitingConfirm = true;
+  pauseAutoScan();
   fetchShelfLife(r.name);
   if (camMode === "demo") toast("演示模式：未识别到摄像头，展示演示数据");
 }
@@ -2336,36 +2363,43 @@ async function captureFrame(){
 }
 async function recognize(){
   if (busy) return;
+  const blocked = scanBlockReason();
+  if (blocked){ showScanGate(blocked); return; }
   busy = true;
   setCamStatus("识别中…", "live");
   try {
     const img = await captureFrame();
+    lastShot = img;
     const fd = new FormData();
     fd.append("image", img, "scan.jpg");
     fd.append("deviceId", DEVICE_ID);
     fd.append("action", "in");
     fd.append("container", "冰箱");
     fd.append("timestamp", new Date().toISOString());
+    fd.append("requestId", (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + "-" + Math.random().toString(36).slice(2, 10)).slice(0, 80));
+    fd.append("preview", "1"); // 预览识别：只返回结果，不入库存；确认录入时才真正提交
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), 12000);
-    const res = await fetch(SCAN_URL, { method:"POST", body:fd, signal:ctl.signal });
+    const res = await fetch(SCAN_URL, { method:"POST", body:fd, signal:ctl.signal, credentials:"include" });
     clearTimeout(timer);
+    if (res.status === 401 || res.status === 403){
+      showScanGate(scanBlockReason() || "login");
+      return;
+    }
     const j = await res.json();
     if (j && j.code === 0 && j.name && j.confidence >= 0.5){
       const emojiMap = { "西兰花":"🥦", "牛奶":"🥛", "光明鲜牛奶":"🥛", "鸡蛋":"🥚", "牛肉":"🥩", "番茄":"🍅", "苹果":"🍎", "面包":"🍞", "黄瓜":"🥒", "生菜":"🥬" };
       showResult({ name:j.name, daysLeft:j.daysLeft || 3, confidence:j.confidence,
-        suggestedContainer:j.suggestedContainer, emoji: emojiMap[j.name] || "🥫" });
+        suggestedContainer:j.suggestedContainer, category:j.category || "", expiryDate:j.expiryDate || "",
+        note:j.note || "", emoji: emojiMap[j.name] || "🥫", _fromServer:true });
       setCamStatus("识别成功", "live");
     } else {
       showLowConf();
       setCamStatus("没看清，请重新对准", "live");
     }
   } catch (e){
-    if (camMode === "live"){
-      setCamStatus("识别服务连接失败", "err");
-      toast("识别服务暂时不可用，已切换到演示数据");
-      demoScan();
-    }
+    setCamStatus("识别服务连接失败，点击重新扫描重试", "err");
+    toast("识别服务暂时不可用，请稍后重试");
   } finally {
     busy = false;
   }
@@ -2373,12 +2407,13 @@ async function recognize(){
 function demoScan(){
   useDemo = true;
   pauseAutoScan();
+  awaitingConfirm = true;
   showResult({ name:"西兰花", daysLeft:3, confidence:0.96, suggestedContainer:"冰箱", emoji:"🥦" });
   setCamStatus("演示模式 · 自动识别中", "demo");
 }
 function pauseAutoScan(){ scanLoopOn = false; }
 function resumeAutoScan(){
-  if (camLive && !scanLoopOn && !busy){
+  if (camLive && !scanLoopOn && !busy && !awaitingConfirm){
     scanLoopOn = true;
     setTimeout(scanTick, 2600);
   }
@@ -2386,11 +2421,13 @@ function resumeAutoScan(){
 function scanTick(){
   if (!scanLoopOn) return;
   if (!document.getElementById("page-scan").classList.contains("active")) return;
+  if (awaitingConfirm){ setTimeout(scanTick, 1000); return; }
   if (!busy && camLive && !useDemo) recognize();
   setTimeout(scanTick, 2600);
 }
 document.getElementById("rescanBtn").addEventListener("click", () => {
   scanResult.classList.add("hide");
+  awaitingConfirm = false;
   if (camMode === "live" && camLive){
     setCamStatus("正在重新识别…", "live");
     setTimeout(() => { if (camLive) recognize(); }, 500);
@@ -2400,9 +2437,42 @@ document.getElementById("rescanBtn").addEventListener("click", () => {
     setTimeout(demoScan, 1400);
   }
 });
-confirmBtn.addEventListener("click", () => {
+confirmBtn.addEventListener("click", async () => {
   if (!lastResult){ toast("还没有识别结果"); return; }
   const r = lastResult;
+  // 真实识别结果：把预览时的那张照片正式提交入库（后端按提交字段直接记账，不再重复调用视觉 AI）
+  if (r._fromServer && lastShot){
+    confirmBtn.disabled = true;
+    const fd = new FormData();
+    fd.append("image", lastShot, "scan.jpg");
+    fd.append("deviceId", DEVICE_ID);
+    fd.append("action", "in");
+    fd.append("container", r.suggestedContainer || "冰箱");
+    fd.append("timestamp", new Date().toISOString());
+    fd.append("requestId", (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + "-" + Math.random().toString(36).slice(2, 10)).slice(0, 80));
+    fd.append("name", r.name);
+    fd.append("category", r.category || "");
+    fd.append("confidence", String(r.confidence || 0));
+    fd.append("expiryDate", r.expiryDate || "");
+    fd.append("suggestedContainer", r.suggestedContainer || "冰箱");
+    fd.append("note", r.note || "");
+    try {
+      const res = await fetch(SCAN_URL, { method:"POST", body:fd, signal:AbortSignal.timeout(15000), credentials:"include" });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j || j.code !== 0){ throw new Error(j && j.msg ? j.msg : "录入失败"); }
+      awaitingConfirm = false;
+      pauseAutoScan();
+      toast(`已录入「${r.name}」 · 已同步至家庭成员`);
+      loadServerData();
+      go("inv");
+      return;
+    } catch (err){
+      toast(err && err.message ? err.message : "网络错误，录入失败，请重试");
+      confirmBtn.disabled = false;
+      return;
+    }
+  }
+  // 演示模式兜底：仅本地录入
   const exp = new Date(NOW); exp.setDate(exp.getDate() + (r._keepDays || 3));
   const existing = INV.find(i => i.name === r.name);
   const now = new Date();
@@ -2415,6 +2485,8 @@ confirmBtn.addEventListener("click", () => {
       when, exp: exp.toISOString().slice(0,10), storage:"保鲜中" });
   }
   HANDLED.delete(r.name);
+  awaitingConfirm = false;
+  pauseAutoScan();
   toast(`已录入「${r.name}」 · 同步至 ${SRV_MEMBERS.length || 1} 位家庭成员`);
   renderHome(); renderChips(); renderInv(); renderRecipe();
   go("inv");
@@ -2485,19 +2557,23 @@ function enterApp(user){
   AUTH.guest = false;
   authScreen.classList.add("hidden");
   renderAccountCard();
+  scanSeq++;
   // 登录后拉取全量真实数据
   loadFamily();
   syncInventory(); loadShoppingHub(); loadWaste(); syncRecipes();
   loadMembers(); loadNotifications(); loadLogs(); loadTrace(); loadPrefs(); loadNutrition(); loadReminders(); loadNotifSet();
   aiRecommend();
+  resumeAutoScan();
   toast(user ? `欢迎回来，${user.name}` : "已进入食刻");
 }
 
 function reloadAllData(){
+  scanSeq++;
   loadFamily();
   syncInventory(); loadShoppingHub(); loadWaste(); syncRecipes();
   loadMembers(); loadNotifications(); loadLogs(); loadTrace(); loadPrefs(); loadNutrition(); loadReminders(); loadNotifSet();
   aiRecommend();
+  resumeAutoScan();
 }
 
 async function checkAuth(){
