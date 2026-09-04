@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  serverExternalPackages: ["ws"],
   eslint: { ignoreDuringBuilds: true },
   async headers() {
     return [
