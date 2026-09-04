@@ -9,6 +9,7 @@ const PUBLIC_API = [
   "/api/auth/register",
   "/api/health",
   "/api/scan",
+  "/api/voice",
   "/api/device",
 ];
 
