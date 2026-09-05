@@ -151,7 +151,7 @@ export type RealtimeResult = {
 
 export async function realtimeChat(
   pcm: Buffer,
-  opts: { systemPrompt?: string; speaker?: string; model?: string } = {},
+  opts: { systemPrompt?: string; speaker?: string; model?: string; timeoutMs?: number } = {},
 ): Promise<RealtimeResult> {
   const key = process.env.VOLC_SPEECH_API_KEY;
   if (!key) throw new Error("未配置 VOLC_SPEECH_API_KEY");
@@ -197,7 +197,8 @@ export async function realtimeChat(
       fn();
     };
 
-    const timeout = setTimeout(() => finish(() => reject(new Error("实时对话超时"))), 30_000);
+    const timeoutMs = opts.timeoutMs ?? 15_000;
+    const timeout = setTimeout(() => finish(() => reject(new Error("实时对话超时"))), timeoutMs);
 
     ws.on("open", () => {
       ws.send(buildEvent(START_CONNECTION, {}));

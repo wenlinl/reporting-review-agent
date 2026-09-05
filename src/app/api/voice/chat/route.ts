@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { realtimeChat } from "@/lib/arkRealtime";
+import { transcribeSpeech, synthesizeSpeech, chatText } from "@/lib/arkVoice";
 import { parseWav, pcmToWav } from "@/lib/wav";
 
 export const runtime = "nodejs";
@@ -20,14 +21,30 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "无法解析音频" }, { status: 400 });
   }
 
-  let result;
+  const SYSTEM = "你是食刻冰箱语音助手小刻，用一句话简短回答，不要超过20个字，不要加动作描写。";
+
+  let result: { text: string; audioPcm: Buffer; firstAudioMs: number; totalMs: number };
   try {
-    result = await realtimeChat(pcm);
+    result = await realtimeChat(pcm, { timeoutMs: 12_000 });
   } catch (e) {
-    return NextResponse.json(
-      { error: "实时对话失败: " + (e instanceof Error ? e.message : String(e)) },
-      { status: 502 },
-    );
+    // 端到端实时语音偶发超时，回退到 ASR + LLM + TTS 管线，保证仍能回话
+    try {
+      const text = await transcribeSpeech(pcm);
+      let reply = "";
+      try {
+        reply = await chatText(SYSTEM, text.trim() || "（用户没有说话）");
+      } catch {
+        reply = "";
+      }
+      if (!reply) reply = "我在听，请再说一遍。";
+      const ttsPcm = await synthesizeSpeech(reply, { format: "pcm", sampleRate: 16000 });
+      result = { text: reply, audioPcm: ttsPcm, firstAudioMs: 0, totalMs: 0 };
+    } catch (e2) {
+      return NextResponse.json(
+        { error: "语音对话失败: " + (e2 instanceof Error ? e2.message : String(e2)) },
+        { status: 502 },
+      );
+    }
   }
 
   if (!result.audioPcm.length) {
