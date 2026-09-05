@@ -286,3 +286,130 @@ export async function realtimeChat(
     });
   });
 }
+
+/** 流式版本：返回一个会持续吐出 16k PCM 分片的 ReadableStream（用于板端边收边播）。 */
+export function realtimeChatStream(
+  pcm: Buffer,
+  opts: { systemPrompt?: string; speaker?: string; model?: string; timeoutMs?: number } = {},
+): ReadableStream<Uint8Array> {
+  const key = process.env.VOLC_SPEECH_API_KEY;
+  if (!key) throw new Error("未配置 VOLC_SPEECH_API_KEY");
+
+  const model = opts.model ?? "1.2.1.1";
+  const speaker = opts.speaker ?? "saturn_zh_female_keainvsheng_tob";
+  const systemPrompt =
+    opts.systemPrompt ??
+    "你是食刻冰箱语音助手小刻，用一句话简短回答，不要超过20个字，不要加动作描写。";
+  const timeoutMs = opts.timeoutMs ?? 15_000;
+
+  return new ReadableStream<Uint8Array>({
+    start(controller) {
+      const connectId = randomUUID();
+      const ws = new WebSocket(WS_URL, {
+        headers: {
+          "X-Api-Key": key,
+          "X-Api-Resource-Id": RESOURCE_ID,
+          "X-Api-Connect-Id": connectId,
+        },
+      });
+      ws.binaryType = "arraybuffer";
+
+      let sessionId: string | null = null;
+      let sessionActive = false;
+      let closed = false;
+
+      const close = () => {
+        if (closed) return;
+        closed = true;
+        clearTimeout(timer);
+        try {
+          if (sessionActive && sessionId) ws.send(buildEvent(FINISH_SESSION, {}, sessionId));
+          ws.close();
+        } catch {
+          /* ignore */
+        }
+        try {
+          controller.close();
+        } catch {
+          /* ignore */
+        }
+      };
+
+      const timer = setTimeout(() => {
+        try {
+          controller.error(new Error("实时对话超时"));
+        } catch {
+          /* ignore */
+        }
+        close();
+      }, timeoutMs);
+
+      ws.on("open", () => {
+        ws.send(buildEvent(START_CONNECTION, {}));
+      });
+
+      ws.on("message", (raw: ArrayBuffer | Buffer) => {
+        const f = parseFrame(Buffer.from(raw as ArrayBuffer));
+        const eid = f.eventId;
+
+        if (f.msgType === ERROR || eid === 599) {
+          try {
+            controller.error(new Error(JSON.stringify(f.dict ?? f.errorCode)));
+          } catch {
+            /* ignore */
+          }
+          close();
+          return;
+        }
+
+        if (eid === CONNECTION_STARTED) {
+          sessionId = randomUUID();
+          const cfg = {
+            tts: {
+              speaker,
+              audio_config: { channel: 1, format: "pcm_s16le", sample_rate: 16000 },
+            },
+            dialog: {
+              extra: { model, input_mod: "push_to_talk" },
+              system_role: systemPrompt,
+            },
+          };
+          ws.send(buildEvent(START_SESSION, cfg, sessionId));
+          return;
+        }
+
+        if (eid === SESSION_STARTED) {
+          sessionActive = true;
+          const step = 3200;
+          for (let i = 0; i < pcm.length; i += step) {
+            ws.send(buildAudio(pcm.subarray(i, i + step), sessionId!));
+          }
+          ws.send(buildEvent(END_ASR, {}, sessionId!));
+          return;
+        }
+
+        if (eid === TTS_RESPONSE) {
+          if (f.payload.length) controller.enqueue(new Uint8Array(f.payload));
+          return;
+        }
+
+        if (eid === TTS_ENDED) {
+          close();
+          return;
+        }
+      });
+
+      ws.on("error", (e: Error) => {
+        try {
+          controller.error(e);
+        } catch {
+          /* ignore */
+        }
+        close();
+      });
+      ws.on("close", () => {
+        if (!closed) close();
+      });
+    },
+  });
+}
