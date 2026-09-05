@@ -37,6 +37,7 @@ const ASR_RESPONSE = 451;
 const ASR_ENDED = 459;
 const TTS_RESPONSE = 352;
 const TTS_ENDED = 359;
+const CHAT_RESPONSE = 550;
 
 function buildHeader(msgType: number, flags: number, serial: number, comp = 0): Buffer {
   return Buffer.from([0x11, (msgType << 4) | (flags & 0x0f), (serial << 4) | (comp & 0x0f), 0x00]);
@@ -176,6 +177,7 @@ export async function realtimeChat(
     let sessionActive = false;
     let settled = false;
     let text = "";
+    let replyText = "";
     const audioChunks: Buffer[] = [];
     const t0 = Date.now();
     let firstAudioMs = 0;
@@ -245,6 +247,11 @@ export async function realtimeChat(
         return;
       }
 
+      if (eid === CHAT_RESPONSE) {
+        if (f.dict?.content) replyText += String(f.dict.content);
+        return;
+      }
+
       if (eid === TTS_RESPONSE) {
         if (!firstAudioMs) firstAudioMs = Date.now() - t0;
         if (f.payload.length) audioChunks.push(f.payload);
@@ -254,7 +261,7 @@ export async function realtimeChat(
       if (eid === TTS_ENDED) {
         totalMs = Date.now() - t0;
         clearTimeout(timeout);
-        finish(() => resolve({ text, audioPcm: Buffer.concat(audioChunks), firstAudioMs, totalMs }));
+        finish(() => resolve({ text: replyText || text, audioPcm: Buffer.concat(audioChunks), firstAudioMs, totalMs }));
         return;
       }
     });
@@ -269,7 +276,7 @@ export async function realtimeChat(
         finish(() => {
           if (audioChunks.length) {
             totalMs = totalMs || Date.now() - t0;
-            resolve({ text, audioPcm: Buffer.concat(audioChunks), firstAudioMs, totalMs });
+            resolve({ text: replyText || text, audioPcm: Buffer.concat(audioChunks), firstAudioMs, totalMs });
           } else {
             reject(new Error("实时对话连接提前关闭"));
           }
