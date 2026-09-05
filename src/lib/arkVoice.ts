@@ -264,7 +264,7 @@ export async function chatText(
         { role: "user", content: user },
       ],
       temperature: opts.temperature ?? 0.6,
-      max_tokens: opts.maxTokens ?? 200,
+      max_tokens: opts.maxTokens ?? 80,
     }),
     signal: AbortSignal.timeout(60_000),
   });
