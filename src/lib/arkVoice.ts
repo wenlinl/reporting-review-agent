@@ -239,3 +239,41 @@ export async function parseVoiceIntent(
     unit: raw.unit === "盒" || raw.unit === "袋" ? raw.unit : "个",
   };
 }
+
+/** 火山方舟纯文本对话（用于实时语音聊天，不要求 JSON）。 */
+export async function chatText(
+  system: string,
+  user: string,
+  opts: { temperature?: number; maxTokens?: number } = {},
+): Promise<string> {
+  const base = process.env.ARK_BASE_URL || "https://ark.cn-beijing.volces.com/api/v3";
+  const key = process.env.ARK_API_KEY;
+  if (!key) throw new Error("未配置 ARK_API_KEY");
+  const model = process.env.ARK_CHAT_MODEL || "deepseek-v4-flash-ga-260731";
+
+  const res = await fetch(`${base}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${key}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+      temperature: opts.temperature ?? 0.6,
+      max_tokens: opts.maxTokens ?? 200,
+    }),
+    signal: AbortSignal.timeout(60_000),
+  });
+
+  if (!res.ok) {
+    const err = await res.text().catch(() => "");
+    throw new Error(`AI 对话失败 (${res.status}): ${err.slice(0, 300)}`);
+  }
+
+  const data = await res.json();
+  return String(data?.choices?.[0]?.message?.content ?? "").trim();
+}
