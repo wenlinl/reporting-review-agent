@@ -8,6 +8,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 FROM base AS deps
+# better-sqlite3 需要在安装阶段本地编译（node-gyp），仅构建期需要工具链，
+# runner 阶段从 base 继承，不会带着 python/make/g++ 进运行时镜像。
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 make g++ \
+    && rm -rf /var/lib/apt/lists/*
 COPY package.json pnpm-lock.yaml* ./
 COPY pnpm-workspace.yaml ./
 COPY prisma ./prisma
