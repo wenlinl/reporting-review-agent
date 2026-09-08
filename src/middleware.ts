@@ -11,6 +11,7 @@ const PUBLIC_API = [
   "/api/scan",
   "/api/voice",
   "/api/device",
+  "/api/barcode",
 ];
 
 const secret = () =>
