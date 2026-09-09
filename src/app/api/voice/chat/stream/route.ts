@@ -38,14 +38,19 @@ export async function POST(req: NextRequest) {
   const reader = upstream.getReader();
 
   const fallbackPromise = (async () => {
-    const text = await transcribeSpeech(pcm);
+    const text = (await transcribeSpeech(pcm)).trim();
     let reply = "";
-    try {
-      reply = await chatText(SYSTEM, text.trim() || "（用户没有说话）");
-    } catch {
-      reply = "";
+    if (!text) {
+      // 没听清就直接固定回复，别让模型"自我发挥"成自我介绍
+      reply = "我在听，请再说一遍。";
+    } else {
+      try {
+        reply = await chatText(SYSTEM, text);
+      } catch {
+        reply = "";
+      }
+      if (!reply) reply = "我在听，请再说一遍。";
     }
-    if (!reply) reply = "我在听，请再说一遍。";
     const audioPcm = await synthesizeSpeech(reply, { format: "pcm", sampleRate: 16000 });
     console.log("[chat/stream] 回退管线完成 %d ms reply=%s",
       Date.now() - tStart, reply.slice(0, 40));
