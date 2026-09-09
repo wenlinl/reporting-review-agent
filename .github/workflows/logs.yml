@@ -1,0 +1,25 @@
+name: Logs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  tail:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 查看应用日志
+        env:
+          SSH_HOST: ${{ secrets.SHIKE_SSH_HOST }}
+          SSH_PORT: ${{ secrets.SHIKE_SSH_PORT }}
+          SSH_USER: ${{ secrets.SHIKE_SSH_USER }}
+          SSH_KEY: ${{ secrets.SHIKE_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=accept-new -o IdentitiesOnly=yes \
+            "$SSH_USER@$SSH_HOST" \
+            "docker logs shike-app-1 --tail 150 2>&1"
