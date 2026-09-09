@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 查看应用日志
+      - name: 查看应用与 nginx 日志 + 本机直连测试
         env:
           SSH_HOST: ${{ secrets.SHIKE_SSH_HOST }}
           SSH_PORT: ${{ secrets.SHIKE_SSH_PORT }}
@@ -22,4 +22,11 @@ jobs:
           ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=accept-new -o IdentitiesOnly=yes \
             "$SSH_USER@$SSH_HOST" \
-            "docker logs shike-app-1 --tail 150 2>&1"
+            "echo '===APP_LOG==='; docker logs shike-app-1 --tail 100 2>&1; \
+             echo '===NGINX_ERR==='; sudo -n tail -n 60 /var/log/nginx/error.log 2>&1; \
+             echo '===LOCAL_ASR==='; \
+             curl -s -m 20 -o /tmp/local_asr_body -w 'local_asr=%{http_code} %{time_total}s\n' \
+               -X POST -H 'Content-Type: audio/wav' \
+               --data-binary @/opt/shike/deploy/nginx-shike.conf \
+               http://127.0.0.1:3000/api/voice/asr 2>&1; \
+             head -c 300 /tmp/local_asr_body 2>/dev/null; echo"
