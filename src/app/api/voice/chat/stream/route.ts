@@ -28,7 +28,8 @@ export async function POST(req: NextRequest) {
 
   const SYSTEM = "你是食刻冰箱语音助手小刻，用一句话简短回答，不要超过20个字，不要加动作描写。";
 
-  // 先探测首个音频分片：流式管线首包约 1.3s，等 3.5s 拿不到再走回退。
+  const tStart = Date.now();
+  // 先探测首个音频分片：流式管线首包约 1.3s，等 6s 拿不到再走回退。
   const upstream = realtimeChatStream(pcm, { systemPrompt: SYSTEM, timeoutMs: 15_000 });
   const reader = upstream.getReader();
 
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
   try {
     first = await Promise.race([
       reader.read(),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 3500)),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 6000)),
     ]);
   } catch {
     first = null;
@@ -44,6 +45,7 @@ export async function POST(req: NextRequest) {
 
   const firstChunk = first && !first.done ? first.value : null;
   if (firstChunk) {
+    console.log("[chat/stream] realtime 首包 %d ms", Date.now() - tStart);
     // 流式路径：首包已就绪，后续分片持续转发（边合成边下发）
     const stream = new ReadableStream<Uint8Array>({
       async start(controller) {
@@ -71,12 +73,15 @@ export async function POST(req: NextRequest) {
       headers: {
         "Content-Type": "audio/pcm",
         "Cache-Control": "no-store",
+        "X-Path": "realtime",
+        "X-First-Ms": String(Date.now() - tStart),
       },
     });
   }
 
   // 回退：串行 ASR -> LLM -> TTS，整段分块下发
   try {
+    console.log("[chat/stream] realtime 超时/失败，走回退管线");
     reader.cancel().catch(() => {});
     const text = await transcribeSpeech(pcm);
     let reply = "";
@@ -87,6 +92,8 @@ export async function POST(req: NextRequest) {
     }
     if (!reply) reply = "我在听，请再说一遍。";
     const audioPcm = await synthesizeSpeech(reply, { format: "pcm", sampleRate: 16000 });
+    console.log("[chat/stream] 回退管线完成 %d ms, reply=%s",
+      Date.now() - tStart, reply.slice(0, 40));
 
     const step = 3200;
     const stream = new ReadableStream<Uint8Array>({
@@ -109,6 +116,8 @@ export async function POST(req: NextRequest) {
       headers: {
         "Content-Type": "audio/pcm",
         "Cache-Control": "no-store",
+        "X-Path": "fallback",
+        "X-First-Ms": String(Date.now() - tStart),
       },
     });
   } catch (e) {
