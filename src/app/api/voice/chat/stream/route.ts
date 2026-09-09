@@ -89,6 +89,7 @@ export async function POST(req: NextRequest) {
         "Cache-Control": "no-store",
         "X-Path": "realtime",
         "X-First-Ms": String(Date.now() - tStart),
+        "X-Realtime-Err": "",
       },
     });
   }
@@ -132,6 +133,7 @@ export async function POST(req: NextRequest) {
         "Cache-Control": "no-store",
         "X-Path": "fallback",
         "X-First-Ms": String(Date.now() - tStart),
+        "X-Realtime-Err": realtimeErr || "no_error",
       },
     });
   } catch (e) {
