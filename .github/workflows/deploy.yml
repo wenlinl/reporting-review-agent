@@ -91,3 +91,18 @@ jobs:
             -o IdentitiesOnly=yes \
             "$SSH_USER@$SSH_HOST" \
             "docker exec shike-app-1 sh -c 'cp /app/data/app.db /app/data/app.db.bak-\$(date +%Y%m%d-%H%M%S) 2>/dev/null; cd /app && npx prisma db push --skip-generate'"
+
+      - name: 应用 nginx 流式配置（失败不阻断部署）
+        env:
+          SSH_HOST: ${{ secrets.SHIKE_SSH_HOST }}
+          SSH_PORT: ${{ secrets.SHIKE_SSH_PORT }}
+          SSH_USER: ${{ secrets.SHIKE_SSH_USER }}
+          SSH_KEY: ${{ secrets.SHIKE_SSH_KEY }}
+          DEPLOY_DIR: ${{ secrets.SHIKE_DEPLOY_DIR }}
+        run: |
+          ssh -p "$SSH_PORT" -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=accept-new \
+            -o IdentitiesOnly=yes \
+            "$SSH_USER@$SSH_HOST" \
+            "sudo -n cp $DEPLOY_DIR/deploy/nginx-shike.conf /etc/nginx/sites-available/shike && sudo -n nginx -t && sudo -n systemctl reload nginx && echo NGINX_RELOAD_OK" \
+            || echo "NGINX_SKIP: 需在服务器手动执行 nginx 更新（无 sudo 或配置未变更）"

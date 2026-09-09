@@ -19,6 +19,11 @@ const ASR_WS_URL = "wss://openspeech.bytedance.com/api/v3/sauc/bigmodel_async";
 const ASR_RESOURCE_ID = "volc.seedasr.sauc.duration";
 const TTS_RESOURCE_ID = "seed-tts-2.0";
 
+// 进程内 TTS 缓存：固定话术（如"请问你拿的是什么？"）第二次起 0 等待。
+// 单实例部署下跨请求复用；如需多实例一致，换成 Redis。
+const ttsCache = new Map<string, Buffer>();
+const TTS_CACHE_MAX = 128;
+
 function requireSpeechKey(): string {
   const key = process.env.VOLC_SPEECH_API_KEY;
   if (!key) {
@@ -47,6 +52,13 @@ export async function synthesizeSpeech(
 
   const audioParams: Record<string, unknown> = { format: opts.format ?? "mp3" };
   if (opts.sampleRate) audioParams.sample_rate = opts.sampleRate;
+
+  const format = (opts.format ?? "mp3").toString();
+  const cacheKey = `${format}|${opts.sampleRate ?? 0}|${voice}|${text}`;
+  const cached = ttsCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
 
   const res = await fetch(`${SPEECH_BASE}/tts/unidirectional`, {
     method: "POST",
@@ -87,6 +99,11 @@ export async function synthesizeSpeech(
 
   const audio = Buffer.concat(chunks);
   if (!audio.length) throw new Error("TTS 返回空音频");
+  if (ttsCache.size >= TTS_CACHE_MAX) {
+    const oldest = ttsCache.keys().next().value;
+    if (oldest !== undefined) ttsCache.delete(oldest);
+  }
+  ttsCache.set(cacheKey, audio);
   return audio;
 }
 
