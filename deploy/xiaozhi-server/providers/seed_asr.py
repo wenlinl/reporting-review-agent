@@ -34,6 +34,8 @@ class ASRProvider(ASRProviderBase):
         self.output_dir = config.get("output_dir", "tmp/")
         self.delete_audio_file = delete_audio_file
         self.timeout = float(config.get("timeout", 30))
+        self.end_window_size = int(config.get("end_window_size", 500))
+        self.force_to_speech_time = int(config.get("force_to_speech_time", 600))
 
     def _full_header(self):
         return bytearray([0x11, 0x11, 0x11, 0x00])
@@ -60,8 +62,8 @@ class ASRProvider(ASRProviderBase):
                 "show_utterances": True,
                 "result_type": "full",
                 "enable_nonstream": True,
-                "end_window_size": 800,
-                "force_to_speech_time": 1000,
+                "end_window_size": self.end_window_size,
+                "force_to_speech_time": self.force_to_speech_time,
             },
         }
 

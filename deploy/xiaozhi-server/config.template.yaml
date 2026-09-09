@@ -28,13 +28,15 @@ VAD:
     threshold: 0.5
     threshold_low: 0.3
     model_dir: models/snakers4_silero-vad
-    min_silence_duration_ms: 350
+    min_silence_duration_ms: 250
 
 ASR:
   SeedASR:
     type: seed_asr
     api_key: __SPEECH_API_KEY__
     resource_id: volc.seedasr.sauc.duration
+    end_window_size: 500
+    force_to_speech_time: 600
     output_dir: tmp/
 
 LLM:

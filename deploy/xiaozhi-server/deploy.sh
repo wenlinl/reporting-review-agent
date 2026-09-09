@@ -6,7 +6,7 @@ SRC_DIR="/opt/shike/deploy/xiaozhi-server"
 XZ_DIR="/opt/xiaozhi-server"
 
 env_val() {
-  grep -E "^$1=" /opt/shike/.env | tail -1 | cut -d= -f2- | tr -d '"' | tr -d "'"
+  grep -E "^$1=" /opt/shike/.env | tail -1 | cut -d= -f2- | tr -d '"' | tr -d "'" || true
 }
 
 LLM_BASE_URL="$(env_val ARK_BASE_URL)"
@@ -15,6 +15,14 @@ LLM_API_KEY="$(env_val ARK_API_KEY)"
 SPEECH_API_KEY="$(env_val VOLC_SPEECH_API_KEY)"
 TTS_VOICE="$(env_val TTS_VOICE)"
 TTS_VOICE="${TTS_VOICE:-zh_female_shuangkuaisisi_uranus_bigtts}"
+
+for req in ARK_BASE_URL ARK_CHAT_MODEL ARK_API_KEY VOLC_SPEECH_API_KEY; do
+  v="$(env_val "$req")"
+  if [ -z "$v" ]; then
+    echo "ERROR: /opt/shike/.env 缺少 $req"
+    exit 1
+  fi
+done
 
 mkdir -p "$XZ_DIR/data" "$XZ_DIR/providers"
 
