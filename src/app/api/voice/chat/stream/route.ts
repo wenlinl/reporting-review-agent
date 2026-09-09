@@ -29,38 +29,58 @@ export async function POST(req: NextRequest) {
   const SYSTEM = "你是食刻冰箱语音助手小刻，用一句话简短回答，不要超过20个字，不要加动作描写。";
 
   const tStart = Date.now();
-  // 先探测首个音频分片：流式管线首包约 1.3s，等 6s 拿不到再走回退。
+
+  // 两条管线并行赛跑，谁先出声用谁：
+  //  A) 豆包端到端实时（短句首包 ~1.5s，偶发慢/无输出）
+  //  B) ASR -> LLM -> bigtts 串行回退（稳定但 9~15s）
+  // 不再串行"先探测 N 秒再回退"，两条同时跑，取先到者。
   const upstream = realtimeChatStream(pcm, { systemPrompt: SYSTEM, timeoutMs: 15_000 });
   const reader = upstream.getReader();
 
-  let first: ReadableStreamReadResult<Uint8Array> | null = null;
-  let realtimeErr = "";
+  const fallbackPromise = (async () => {
+    const text = await transcribeSpeech(pcm);
+    let reply = "";
+    try {
+      reply = await chatText(SYSTEM, text.trim() || "（用户没有说话）");
+    } catch {
+      reply = "";
+    }
+    if (!reply) reply = "我在听，请再说一遍。";
+    const audioPcm = await synthesizeSpeech(reply, { format: "pcm", sampleRate: 16000 });
+    console.log("[chat/stream] 回退管线完成 %d ms reply=%s",
+      Date.now() - tStart, reply.slice(0, 40));
+    return audioPcm;
+  })();
+
+  type Race =
+    | { kind: "rt"; chunk: Uint8Array }
+    | { kind: "rterr"; e: string }
+    | { kind: "fb"; audioPcm: Buffer };
+
+  let race: Race;
   try {
-    const res = await Promise.race([
+    race = await Promise.race<Race>([
       reader.read().then(
-        (r) => ({ r: r as ReadableStreamReadResult<Uint8Array>, e: "" }),
-        (e) => ({
-          r: null,
-          e: String((e instanceof Error && e.message) || e),
-        }),
+        (r) =>
+          (r.done
+            ? { kind: "rterr", e: "rt_done_no_audio" }
+            : { kind: "rt", chunk: r.value }) as Race,
+        (e) =>
+          ({ kind: "rterr", e: String((e instanceof Error && e.message) || e) }) as Race,
       ),
-      new Promise<{ r: ReadableStreamReadResult<Uint8Array> | null; e: string }>(
-        (resolve) => setTimeout(() => resolve({ r: null, e: "timeout_4000ms" }), 4000),
-      ),
+      fallbackPromise.then((audioPcm) => ({ kind: "fb", audioPcm }) as Race),
     ]);
-    first = res.r;
-    realtimeErr = res.e;
   } catch (e) {
-    realtimeErr = String(e);
-  }
-  if (realtimeErr) {
-    console.log("[chat/stream] realtime 失败: %s", realtimeErr);
+    return NextResponse.json(
+      { error: "语音对话失败: " + (e instanceof Error ? e.message : String(e)) },
+      { status: 502 },
+    );
   }
 
-  const firstChunk = first && !first.done ? first.value : null;
-  if (firstChunk) {
+  if (race.kind === "rt") {
+    const firstChunk = race.chunk;
+    fallbackPromise.catch(() => {}); // 实时赢了，丢弃回退结果（避免未处理 rejection）
     console.log("[chat/stream] realtime 首包 %d ms", Date.now() - tStart);
-    // 流式路径：首包已就绪，后续分片持续转发（边合成边下发）
     const stream = new ReadableStream<Uint8Array>({
       async start(controller) {
         try {
@@ -94,52 +114,46 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // 回退：串行 ASR -> LLM -> TTS，整段分块下发
+  // 回退赢（或实时出错）：用回退整段音频分块下发
+  const rtErr = race.kind === "rterr" ? race.e : "rt_slow";
+  if (race.kind === "rterr") {
+    console.log("[chat/stream] realtime 失败: %s", rtErr);
+  }
+  reader.cancel().catch(() => {});
+  let audioPcm: Buffer;
   try {
-    console.log("[chat/stream] realtime 超时/失败，走回退管线");
-    reader.cancel().catch(() => {});
-    const text = await transcribeSpeech(pcm);
-    let reply = "";
-    try {
-      reply = await chatText(SYSTEM, text.trim() || "（用户没有说话）");
-    } catch {
-      reply = "";
-    }
-    if (!reply) reply = "我在听，请再说一遍。";
-    const audioPcm = await synthesizeSpeech(reply, { format: "pcm", sampleRate: 16000 });
-    console.log("[chat/stream] 回退管线完成 %d ms, reply=%s",
-      Date.now() - tStart, reply.slice(0, 40));
-
-    const step = 3200;
-    const stream = new ReadableStream<Uint8Array>({
-      start(controller) {
-        try {
-          for (let i = 0; i < audioPcm.length; i += step) {
-            controller.enqueue(new Uint8Array(audioPcm.subarray(i, i + step)));
-          }
-        } catch {
-          /* ignore */
-        }
-        try {
-          controller.close();
-        } catch {
-          /* ignore */
-        }
-      },
-    });
-    return new Response(stream, {
-      headers: {
-        "Content-Type": "audio/pcm",
-        "Cache-Control": "no-store",
-        "X-Path": "fallback",
-        "X-First-Ms": String(Date.now() - tStart),
-        "X-Realtime-Err": realtimeErr || "no_error",
-      },
-    });
+    audioPcm = race.kind === "fb" ? race.audioPcm : await fallbackPromise;
   } catch (e) {
     return NextResponse.json(
       { error: "语音对话失败: " + (e instanceof Error ? e.message : String(e)) },
       { status: 502 },
     );
   }
+
+  const step = 3200;
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      try {
+        for (let i = 0; i < audioPcm.length; i += step) {
+          controller.enqueue(new Uint8Array(audioPcm.subarray(i, i + step)));
+        }
+      } catch {
+        /* ignore */
+      }
+      try {
+        controller.close();
+      } catch {
+        /* ignore */
+      }
+    },
+  });
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "audio/pcm",
+      "Cache-Control": "no-store",
+      "X-Path": "fallback",
+      "X-First-Ms": String(Date.now() - tStart),
+      "X-Realtime-Err": rtErr,
+    },
+  });
 }
