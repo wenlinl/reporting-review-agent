@@ -76,12 +76,14 @@ class TTSProvider(TTSProviderBase):
             if not isinstance(p, dict):
                 continue
             code = p.get("code")
-            if code in (0, 20000000) and p.get("data"):
-                try:
-                    chunks.append(base64.b64decode(p["data"]))
-                except Exception:
-                    continue
-            elif code is not None:
+            if code in (0, 20000000):
+                if p.get("data"):
+                    try:
+                        chunks.append(base64.b64decode(p["data"]))
+                    except Exception:
+                        continue
+                continue
+            if code is not None:
                 raise Exception(
                     f"Seed TTS 流错误: {json.dumps(p, ensure_ascii=False)[:300]}"
                 )

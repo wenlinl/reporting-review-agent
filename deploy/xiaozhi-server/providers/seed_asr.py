@@ -93,7 +93,10 @@ class ASRProvider(ASRProviderBase):
                 seq = 1
                 for i in range(0, len(pcm), step):
                     seq += 1
-                    body = gzip.compress(pcm[i : i + step])
+                    chunk = pcm[i : i + step]
+                    if len(chunk) % 2:
+                        chunk = chunk[:-1]
+                    body = gzip.compress(chunk)
                     f = self._audio_header(False)
                     f += seq.to_bytes(4, "big", signed=True)
                     f += len(body).to_bytes(4, "big")
@@ -121,12 +124,33 @@ class ASRProvider(ASRProviderBase):
                     flags = frame[1] & 0x0F
                     serial = frame[2] >> 4
                     comp = frame[2] & 0x0F
+                    logger.bind(tag=TAG).debug(
+                        f"ASR 响应帧 type={msg_type} flags={flags} "
+                        f"serial={serial} comp={comp} len={len(frame)}"
+                    )
                     off = hs * 4
                     if flags & 0x01:
                         off += 4
                     if msg_type == SERVER_ERROR_RESPONSE:
                         code = int.from_bytes(frame[off : off + 4], "big", signed=True)
-                        logger.bind(tag=TAG).error(f"Seed ASR 服务端错误 code={code}")
+                        detail = ""
+                        if len(frame) >= off + 8:
+                            msize = int.from_bytes(
+                                frame[off + 4 : off + 8], "big"
+                            )
+                            body = frame[off + 8 : off + 8 + msize]
+                            if body[:2] == b"\x1f\x8b":
+                                try:
+                                    body = gzip.decompress(body)
+                                except Exception:
+                                    pass
+                            try:
+                                detail = body.decode("utf-8", "ignore")[:300]
+                            except Exception:
+                                detail = repr(body[:300])
+                        logger.bind(tag=TAG).error(
+                            f"Seed ASR 服务端错误 code={code} detail={detail}"
+                        )
                         return ""
                     if msg_type != SERVER_FULL_RESPONSE:
                         continue
@@ -146,7 +170,13 @@ class ASRProvider(ASRProviderBase):
                             payload = json.loads(data.decode("utf-8"))
                         except Exception:
                             payload = {}
+                    logger.bind(tag=TAG).debug(
+                        f"ASR payload={json.dumps(payload, ensure_ascii=False)[:400]}"
+                    )
                     if flags & FINAL_FLAG:
+                        logger.bind(tag=TAG).debug(
+                            f"ASR 最终帧 payload={json.dumps(payload, ensure_ascii=False)[:500]}"
+                        )
                         res = payload.get("result") or {}
                         if isinstance(res, dict):
                             final_text = res.get("text") or ""
