@@ -1,0 +1,16 @@
+services:
+  xiaozhi-esp32-server:
+    image: ghcr.io/xinnan-tech/xiaozhi-esp32-server:server_latest
+    container_name: xiaozhi-esp32-server
+    restart: unless-stopped
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:8003:8003"
+    volumes:
+      - ./data:/opt/xiaozhi-esp32-server/data
+      - ./providers/seed_asr.py:/opt/xiaozhi-esp32-server/core/providers/asr/seed_asr.py
+      - ./providers/seed_tts.py:/opt/xiaozhi-esp32-server/core/providers/tts/seed_tts.py

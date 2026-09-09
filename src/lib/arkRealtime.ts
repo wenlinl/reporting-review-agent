@@ -300,7 +300,7 @@ export function realtimeChatStream(
   const systemPrompt =
     opts.systemPrompt ??
     "你是食刻冰箱语音助手小刻，用一句话简短回答，不要超过20个字，不要加动作描写。";
-  const timeoutMs = opts.timeoutMs ?? 15_000;
+  const timeoutMs = opts.timeoutMs ?? 30_000;
 
   return new ReadableStream<Uint8Array>({
     start(controller) {
@@ -389,7 +389,13 @@ export function realtimeChatStream(
         }
 
         if (eid === TTS_RESPONSE) {
-          if (f.payload.length) controller.enqueue(new Uint8Array(f.payload));
+          if (f.payload.length && !closed) {
+            try {
+              controller.enqueue(new Uint8Array(f.payload));
+            } catch {
+              /* 超时或出错后控制器已关闭，丢弃迟到的音频分片 */
+            }
+          }
           return;
         }
 

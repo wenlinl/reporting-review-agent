@@ -1,0 +1,60 @@
+server:
+  ip: 0.0.0.0
+  port: 8000
+  http_port: 8003
+  websocket: wss://shike.live/xiaozhi/v1/
+  vision_explain: ""
+  timezone_offset: "+8"
+  auth:
+    enabled: false
+
+delete_audio: true
+close_connection_no_voice_time: 120
+tts_timeout: 30
+enable_wakeup_words_response_cache: true
+enable_greeting: true
+enable_stop_tts_notify: false
+enable_websocket_ping: false
+
+selected_module:
+  VAD: SileroVAD
+  ASR: SeedASR
+  LLM: DoubaoLLM
+  TTS: SeedTTS
+
+VAD:
+  SileroVAD:
+    type: silero
+    threshold: 0.5
+    threshold_low: 0.3
+    model_dir: models/snakers4_silero-vad
+    min_silence_duration_ms: 350
+
+ASR:
+  SeedASR:
+    type: seed_asr
+    api_key: __SPEECH_API_KEY__
+    resource_id: volc.seedasr.sauc.duration
+    output_dir: tmp/
+
+LLM:
+  DoubaoLLM:
+    type: openai
+    base_url: __LLM_BASE_URL__
+    model_name: __LLM_MODEL__
+    api_key: __LLM_API_KEY__
+
+TTS:
+  SeedTTS:
+    type: seed_tts
+    api_key: __SPEECH_API_KEY__
+    voice: __TTS_VOICE__
+    format: mp3
+    sample_rate: 24000
+    output_dir: tmp/
+    tts_timeout: 30
+
+prompt: |
+  你是食刻冰箱语音助手小刻，用一句话简短回答，不要超过20个字，不要加动作描写。
+prompt_template: agent-base-prompt.txt
+system_error_response: "主人，小刻现在有点忙，我们稍后再试吧。"
