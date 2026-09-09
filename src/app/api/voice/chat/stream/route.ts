@@ -34,13 +34,27 @@ export async function POST(req: NextRequest) {
   const reader = upstream.getReader();
 
   let first: ReadableStreamReadResult<Uint8Array> | null = null;
+  let realtimeErr = "";
   try {
-    first = await Promise.race([
-      reader.read(),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 6000)),
+    const res = await Promise.race([
+      reader.read().then(
+        (r) => ({ r: r as ReadableStreamReadResult<Uint8Array>, e: "" }),
+        (e) => ({
+          r: null,
+          e: String((e instanceof Error && e.message) || e),
+        }),
+      ),
+      new Promise<{ r: ReadableStreamReadResult<Uint8Array> | null; e: string }>(
+        (resolve) => setTimeout(() => resolve({ r: null, e: "timeout_6000ms" }), 6000),
+      ),
     ]);
-  } catch {
-    first = null;
+    first = res.r;
+    realtimeErr = res.e;
+  } catch (e) {
+    realtimeErr = String(e);
+  }
+  if (realtimeErr) {
+    console.log("[chat/stream] realtime 失败: %s", realtimeErr);
   }
 
   const firstChunk = first && !first.done ? first.value : null;
