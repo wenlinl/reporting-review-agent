@@ -115,6 +115,7 @@ export async function POST(req: NextRequest) {
         "X-Path": "realtime",
         "X-First-Ms": String(Date.now() - tStart),
         "X-Realtime-Err": "",
+        "X-Up-Bytes": String(body.length),
       },
     });
   }
@@ -159,6 +160,7 @@ export async function POST(req: NextRequest) {
       "X-Path": "fallback",
       "X-First-Ms": String(Date.now() - tStart),
       "X-Realtime-Err": rtErr,
+      "X-Up-Bytes": String(body.length),
     },
   });
 }
