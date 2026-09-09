@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
         }),
       ),
       new Promise<{ r: ReadableStreamReadResult<Uint8Array> | null; e: string }>(
-        (resolve) => setTimeout(() => resolve({ r: null, e: "timeout_6000ms" }), 6000),
+        (resolve) => setTimeout(() => resolve({ r: null, e: "timeout_4000ms" }), 4000),
       ),
     ]);
     first = res.r;
