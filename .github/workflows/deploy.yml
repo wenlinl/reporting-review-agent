@@ -118,5 +118,5 @@ jobs:
             -o StrictHostKeyChecking=accept-new \
             -o IdentitiesOnly=yes \
             "$SSH_USER@$SSH_HOST" \
-            "sudo -n cp $DEPLOY_DIR/deploy/nginx-shike.conf /etc/nginx/sites-available/shike && sudo -n nginx -t && sudo -n systemctl reload nginx && echo NGINX_RELOAD_OK" \
+            "sudo -n cp $DEPLOY_DIR/deploy/nginx-shike.conf /etc/nginx/sites-available/shike && sudo -n cp $DEPLOY_DIR/deploy/nginx-shike.conf /etc/nginx/sites-enabled/shike && sudo -n nginx -t && sudo -n systemctl reload nginx && echo NGINX_RELOAD_OK" \
             || echo "NGINX_SKIP: 需在服务器手动执行 nginx 更新（无 sudo 或配置未变更）"

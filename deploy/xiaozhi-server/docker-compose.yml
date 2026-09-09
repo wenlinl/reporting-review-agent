@@ -14,3 +14,4 @@ services:
       - ./data:/opt/xiaozhi-esp32-server/data
       - ./providers/seed_asr.py:/opt/xiaozhi-esp32-server/core/providers/asr/seed_asr.py
       - ./providers/seed_tts.py:/opt/xiaozhi-esp32-server/core/providers/tts/seed_tts.py
+      - ./patches/helloHandle.py:/opt/xiaozhi-esp32-server/core/handle/helloHandle.py

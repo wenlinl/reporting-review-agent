@@ -24,7 +24,7 @@ for req in ARK_BASE_URL ARK_CHAT_MODEL ARK_API_KEY VOLC_SPEECH_API_KEY; do
   fi
 done
 
-mkdir -p "$XZ_DIR/data" "$XZ_DIR/providers"
+mkdir -p "$XZ_DIR/data" "$XZ_DIR/providers" "$XZ_DIR/patches"
 
 sed -e "s|__LLM_BASE_URL__|${LLM_BASE_URL}|g" \
     -e "s|__LLM_MODEL__|${LLM_MODEL}|g" \
@@ -36,6 +36,7 @@ chmod 600 "$XZ_DIR/data/.config.yaml"
 
 cp -f "$SRC_DIR/providers/seed_asr.py" "$XZ_DIR/providers/seed_asr.py"
 cp -f "$SRC_DIR/providers/seed_tts.py" "$XZ_DIR/providers/seed_tts.py"
+cp -f "$SRC_DIR/patches/helloHandle.py" "$XZ_DIR/patches/helloHandle.py"
 cp -f "$SRC_DIR/docker-compose.yml" "$XZ_DIR/docker-compose.yml"
 
 cd "$XZ_DIR"
