@@ -9,6 +9,7 @@ const PUBLIC_API = [
   "/api/auth/register",
   "/api/health",
   "/api/scan",
+  "/api/session",   // 长录 take 分片上传（2026-10-15）：设备 Token 在路由内校验
   "/api/voice",
   "/api/device",
   "/api/barcode",
